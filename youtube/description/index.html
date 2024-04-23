@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Get YouTube video details</title>
   <link rel="stylesheet" href="style.css">
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" /> -->
+  <script src="https://kit.fontawesome.com/eb01cc979e.js" crossorigin="anonymous"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js" integrity="sha512-u3fPA7V8qQmhBPNT5quvaXVa1mnnLSXUep5PS1qo5NRzHwG19aHmNJnj1Q8hpA/nBWZtZD4r4AX6YOt5ynLN2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
 </head>
 <body>
 
@@ -16,12 +19,18 @@
   </div>
 
   <div class="output-container">
-    <div class="output">
-      <div class="gg">
+    <div class="output start-container">
+      <div class="start-up">
         <img src="/images/cat.png" alt="Cat image">
-        <div class="tof-tool-message-text">Enter a YouTube video link to see the magic</div>
+        <div class="text">Enter a YouTube video link to see the magic</div>
       </div>
     </div>
+    <div class="loading">
+      <div class="output">
+        <i class="fa-solid fa-arrows-spin fa-spin fa-10x"></i>
+      </div>
+    </div>
+    <div class="text-output-container"></div>
   </div>
   
   <script src="script.js"></script>

@@ -1,6 +1,11 @@
 const $qs = selector => document.querySelector(selector);
+
+const loading = $qs(".loading");
 const inputElement = $qs("#url");
+const start_container = $qs(".start-container");
 const output_container = $qs(".output-container");
+const text_output_container = $qs(".text-output-container");
+let is_start_container_hidded = false;
 
 function make_output_element(text) {
   const el = document.createElement("pre");
@@ -23,26 +28,47 @@ async function get_description(id) {
   return description;
 }
 
-const func = async (event) => {
+function hide(element) {
+  element.style.display = "none";
+}
+
+function unhide(element) {
+  element.style.display = "block";
+}
+
+async function callback_for_blur(event) {
   try {
     let url = new URL(event.target.value);
     let pathname = url.pathname;
     let id;
-
+    
     if (pathname.startsWith("/shorts")) id = pathname.slice(8);
     else if (pathname.startsWith("/live")) id = pathname.slice(6);
     else if (pathname.startsWith("/watch")) id = url.searchParams.get("v");
     else id = pathname.slice(1);
+    
+    if (!is_start_container_hidded) {
+      hide(start_container);
+      is_start_container_hidded = true;
+    }
 
+    empty_the_element(text_output_container);
+    unhide(loading);
+    
     const description = await get_description(id);
     const div = make_output_element(description);
 
-    empty_the_element(output_container);
-    output_container.appendChild(div);
+    hide(loading);
+    text_output_container.appendChild(div);
   } catch (error) {
+    hide(loading);
+    empty_the_element(text_output_container);
+    unhide(start_container);
+    is_start_container_hidded = false;
+
     console.log(error);
     alert("Wrong URL.");
   }
 }
 
-inputElement.addEventListener("blur", func);
+inputElement.addEventListener("blur", callback_for_blur);

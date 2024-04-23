@@ -10,9 +10,9 @@ body {
   background-color: #101010;
 }
 
-.input {
-  /* text-align: center; */
-}
+
+
+/* for input */
 
 #url {
   width: 50vw;
@@ -28,10 +28,29 @@ body {
   outline: none;
 }
 
-/* .input .button {
-  width: 90px;
-  height: 40px;
-} */
+/* end */
+
+
+
+/* Cat container */
+
+.start-up {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.text {
+  margin-bottom: 15px;
+  font-size: large;
+}
+
+/* end */
+
+
+
+/* Output div */
 
 .output {
   width: 80vw;
@@ -43,11 +62,22 @@ body {
   border: 1px solid #534e4e;
 }
 
-.gg {
-  text-align: center;
-  margin-bottom: 20px;
+/* end */
+
+
+
+/* Loading container */
+
+.loading {
+  display: none;
 }
 
-.tof-tool-message-text {
-  font-size: large;
+.loading > .output {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 40px;
+  padding: 50px;
 }
+
+/* end */
