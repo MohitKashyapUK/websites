@@ -1,0 +1,23 @@
+body {
+  padding-top: 10vw;
+}
+
+pre {
+  overflow: auto;
+}
+
+.magic-container {
+  text-align: center;
+}
+
+img {
+  margin: auto;
+}
+
+.text {
+  font-size: medium;
+}
+
+.error.message {
+  display: none;
+}
