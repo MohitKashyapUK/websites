@@ -1,0 +1,8 @@
+body {
+  padding-top: 10vh;
+}
+
+.formula-container > div {
+  display: flex;
+  align-items: center;
+}

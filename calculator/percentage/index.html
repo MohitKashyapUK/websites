@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="/Semantic-UI-CSS-master/semantic.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="/Semantic-UI-CSS-master/semantic.min.js"></script>
+</head>
+<body>
+  
+  <main class="ui container">
+    <h1 class="ui header">Calculator for percentage</h1>
+
+    <div class="ui container segment">
+      <div class="ui container segment formula-container">
+        <div class="ui top attached label">Percentage</div>
+        <div class="ui input">
+          <div><span class="formula-one-output"></span>%&nbsp;&nbsp;=&nbsp;&nbsp;</div>
+          <input type="number" placeholder="Part">
+          <div>&nbsp;&nbsp;÷&nbsp;&nbsp;</div>
+          <input type="number" placeholder="Whole">
+          <div>&nbsp;&nbsp;×&nbsp;&nbsp;</div>
+          <div class="ui input icon">
+            <input type="number" placeholder="Percentage" value="100">
+            <i class="percent icon"></i>
+          </div>
+        </div>
+      </div>
+      <div class="ui container segment formula-container">
+        <div class="ui top attached label">Percent of</div>
+        <div class="ui input">
+          <div><span class="formula-two-output">Value</span>&nbsp;&nbsp;=&nbsp;&nbsp;</div>
+          <div class="ui input icon right">
+            <input type="number" placeholder="Percent">
+            <i class="percent icon"></i>
+          </div>
+          <div>&nbsp;&nbsp;÷&nbsp;&nbsp;</div>
+          <div class="ui input icon">
+            <input type="number" placeholder="Part" value="100">
+            <i class="percent icon"></i>
+          </div>
+          <div>&nbsp;&nbsp;×&nbsp;&nbsp;</div>
+          <input type="number" placeholder="Whole">
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
