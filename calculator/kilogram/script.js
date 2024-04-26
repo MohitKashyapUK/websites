@@ -19,7 +19,7 @@ function first() {
   const price = Number(first_container_inputs[0].value);
   const kg = Number(first_container_inputs[1].value);
   if (!(price && kg)) {
-    first_output.innerText = "Price";
+    first_output.innerText = null;
     return;
   }
   first_output.innerText = parseFloat((price / kg).toFixed(2));
@@ -30,7 +30,7 @@ function second() {
   const kg = Number(second_container_inputs[1].value);
   const weight = Number(second_container_inputs[2].value);
   if (!(price && kg && weight)) {
-    second_output.innerText = "Price";
+    second_output.innerText = null;
     return;
   }
   second_output.innerText = parseFloat(((price / kg)*weight).toFixed(2));
