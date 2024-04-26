@@ -14,7 +14,7 @@ function formula_one() {
     first_output.innerText = null;
     return;
   }
-  first_output.innerText = (part/whole)*percent;
+  first_output.innerText = ((part/whole)*percent).toFixed(2);
 }
 
 function formula_two() {
@@ -25,7 +25,7 @@ function formula_two() {
     second_output.innerText = "Value";
     return;
   }
-  second_output.innerText = (percent/part)*whole;
+  second_output.innerText = ((percent/part)*whole).toFixed(2);
 }
 
 for (let index = 0; index < second_list.length; index++) {
