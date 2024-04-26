@@ -14,7 +14,7 @@ function formula_one() {
     first_output.innerText = null;
     return;
   }
-  first_output.innerText = ((part/whole)*percent).toFixed(2);
+  first_output.innerText = parseFloat(((part/whole)*percent).toFixed(2));
 }
 
 function formula_two() {
@@ -25,15 +25,8 @@ function formula_two() {
     second_output.innerText = "Value";
     return;
   }
-  second_output.innerText = ((percent/part)*whole).toFixed(2);
+  second_output.innerText = parseFloat(((percent/part)*whole).toFixed(2));
 }
 
-for (let index = 0; index < second_list.length; index++) {
-  const element = first_list[index];
-  element.addEventListener("input", formula_one);
-}
-
-for (let index = 0; index < second_list.length; index++) {
-  const element = second_list[index];
-  element.addEventListener("input", formula_two);
-}
+for (let index = 0; index < second_list.length; index++) first_list[index].addEventListener("input", formula_one);
+for (let index = 0; index < second_list.length; index++) second_list[index].addEventListener("input", formula_two);

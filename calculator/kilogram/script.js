@@ -22,7 +22,7 @@ function first() {
     first_output.innerText = "Price";
     return;
   }
-  first_output.innerText = (price / kg).toFixed(2);
+  first_output.innerText = parseFloat((price / kg).toFixed(2));
 }
 
 function second() {
@@ -33,7 +33,7 @@ function second() {
     second_output.innerText = "Price";
     return;
   }
-  second_output.innerText = ((price / kg)*weight).toFixed(2);
+  second_output.innerText = parseFloat(((price / kg)*weight).toFixed(2));
 }
 
 function third() {
@@ -45,7 +45,7 @@ function third() {
     return;
   }
   // const kg_price = ;
-  third_output.innerText = (price/(total_price/kg)).toFixed(3);
+  third_output.innerText = parseFloat((price/(total_price/kg)).toFixed(3));
 }
 
 for (let index = 0; index < first_container_inputs.length; index++) first_container_inputs[index].addEventListener("input", first);
