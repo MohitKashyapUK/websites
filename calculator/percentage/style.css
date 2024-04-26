@@ -1,8 +1,12 @@
 body {
-  padding-top: 10vh;
+  padding-top: 5vh;
 }
 
-.formula-container > div {
+/* .formula-container > div {
   display: flex;
+} */
+
+.ui.input {
   align-items: center;
+  flex-wrap: wrap;
 }

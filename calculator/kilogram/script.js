@@ -19,7 +19,7 @@ function first() {
   const price = Number(first_container_inputs[0].value);
   const kg = Number(first_container_inputs[1].value);
   if (!(price && kg)) {
-    first_output.innerText = "KG";
+    first_output.innerText = "Price";
     return;
   }
   first_output.innerText = (price / kg).toFixed(2);
