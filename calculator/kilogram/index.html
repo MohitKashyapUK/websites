@@ -15,34 +15,47 @@
     
     <div class="ui segment container">
       <div class="ui segment container">
-        <div class="ui top attached label">Price per KG</div>
+        <div class="ui top attached label">Price per KG (Required)</div>
         <div class="ui input">
           <div><span></span>₹&nbsp;&nbsp;=&nbsp;&nbsp;</div>
-          <input type="number" placeholder="Total price">
+          <div class="ui icon input">
+            <input type="number" placeholder="Total price" />
+            <i class="rupee sign icon"></i>
+          </div>
           <div>&nbsp;&nbsp;÷&nbsp;&nbsp;</div>
-          <input type="number" placeholder="Total weight in KG">
+          <div class="ui input right labeled">
+            <input type="number" placeholder="Total weight" />
+            <div class="ui basic label">KG</div>
+          </div>
         </div>
       </div>
       <div class="ui segment container">
-        <div class="ui top attached label">Find price by KG</div>
+        <div class="ui top attached label">Price per unit</div>
         <div class="ui input">
           <div><span></span>₹&nbsp;&nbsp;=&nbsp;&nbsp;</div>
-          <input type="number" placeholder="Total price">
-          <div>&nbsp;&nbsp;÷&nbsp;&nbsp;</div>
-          <input type="number" placeholder="Total weight in KG">
-          <div>&nbsp;&nbsp;And&nbsp;&nbsp;</div>
-          <input type="number" placeholder="Unit in KG">
+          <!-- <input type="number" placeholder="Total price">
+            <input type="number" placeholder="Total weight in KG">
+            <div>&nbsp;&nbsp;And&nbsp;&nbsp;</div> -->
+          <div>(Price per KG)&nbsp;&nbsp;×&nbsp;&nbsp;</div>
+          <div class="ui input right labeled">
+            <input type="number" placeholder="Unit">
+            <div class="ui basic label">KG</div>
+          </div>
         </div>
       </div>
       <div class="ui segment container">
         <div class="ui top attached label">Find KG by price</div>
         <div class="ui input">
           <div><span></span>KG&nbsp;&nbsp;=&nbsp;&nbsp;</div>
-          <input type="number" placeholder="Total price">
+          <!-- <input type="number" placeholder="Total price">
           <div>&nbsp;&nbsp;÷&nbsp;&nbsp;</div>
           <input type="number" placeholder="Total weight in KG">
-          <div>&nbsp;&nbsp;And&nbsp;&nbsp;</div>
-          <input type="number" placeholder="Price">
+          <div>&nbsp;&nbsp;And&nbsp;&nbsp;</div> -->
+          <div class="ui input icon">
+            <input type="number" placeholder="Price">
+            <i class="rupee sign icon"></i>
+          </div>
+          <div>&nbsp;&nbsp;÷&nbsp;&nbsp;(Price per KG)</div>
         </div>
       </div>
     </div>
