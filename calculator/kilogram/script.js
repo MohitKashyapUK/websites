@@ -15,12 +15,12 @@ const third_output = third_container.querySelector('span');
 
 const price_per_kg = (total_price, weight_in_kg) => parseFloat((total_price/weight_in_kg).toFixed(2));
 const unit_price = (price_per_kg, unit_in_kg) => parseFloat((price_per_kg*unit_in_kg).toFixed(2));
-const kg_by_price = (price_unit, per_kg_price) => parseFloat((price_unit/per_kg_price).toFixed(3));
+const kg_by_price = (price_unit, per_kg_price) => (price_unit/per_kg_price).toFixed(3);
 
 function calculator() {
   const total_price = Number(inputs[0].value);
   const total_weight_in_kg = Number(inputs[1].value);
-  
+
   if (!(total_price && total_weight_in_kg)) {
     first_output.innerText = null;
     second_output.innerText = null;
