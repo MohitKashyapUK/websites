@@ -10,9 +10,9 @@ const error_message = $qs(".error.message");
 
 function removeAllChildren(element) {
   while (element.firstChild) {
-      element.removeChild(element.firstChild);
-    }
+    element.removeChild(element.firstChild);
   }
+}
 
 function hide(element) {
   element.style.display = "none";
