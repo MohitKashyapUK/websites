@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PH video downloader</title>
-  <link rel="stylesheet" href="/Semantic-UI-CSS-master/semantic.min.css">
+  <!-- <link rel="stylesheet" href="/Semantic-UI-CSS-master/semantic.min.css">
+  <script src="/Semantic-UI-CSS-master/semantic.min.js"></script> -->
   <link rel="stylesheet" href="style.css">
-  <script src="/Semantic-UI-CSS-master/semantic.min.js"></script>
 </head>
 <body>
   
-  <main class="ui container">
+  <!-- <main class="ui container">
     <h1 class="ui header">PH video downloader</h1>
 
     <div class="ui action fluid input">
@@ -25,7 +25,38 @@
     </div>
   </main>
 
-  <script src="script.js"></script>
+  <script src="script.js"></script> -->
+
+  <main class="container">
+    <h1>Get PH video's "stream" URL</h1>
+    <input type="url">
+    <button type="button">Get</button>
+    <div class="output"></div>
+  </main>
+
+  <script>
+    const $qs = selector => document.querySelector(selector);
+    const output = $qs(".output");
+
+    $qs("button").addEventListener("click", () => {
+      const url = URL.parse("https://www.pornhub.org/view_video.php?viewkey=ph6332f781a8c8e");
+  
+      if (!url) {
+        output.innerHTML = "The URL is invalid.";
+        return;
+      }
+
+      const id = url.searchParams.get('viewkey');
+
+      if (!id) {
+        output.innerHTML = "The URL is invalid.";
+        return;
+      }
+
+      fetch("https://ph-7kyn.onrender.com/" + id)
+      .then(response => output.innerHTML = response.data);
+    });
+  </script>
 
 </body>
 </html>

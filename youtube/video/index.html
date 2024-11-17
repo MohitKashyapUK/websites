@@ -3,42 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <link rel="stylesheet" href="/Semantic-UI-CSS-master/semantic.min.css">
-  <link rel="stylesheet" href="style.css">
-  <script src="/Semantic-UI-CSS-master/semantic.min.js"></script>
+  <title>Get YouTube video details</title>
 </head>
 <body>
-  
-  <main class="ui container">
-    <h1 class="ui header">YouTube video downloader</h1>
 
-    <div class="ui left icon input action fluid large">
-      <i class="search icon"></i>
-      <input type="url" id="url" placeholder="Enter link.">
-      <div class="ui animated primary button">
-        <div class="visible content">Submit</div>
-        <div class="hidden content">Go</div>
-      </div>
-      <button type="reset" class="ui button negative">Reset</button>
-    </div>
+  <div class="input">
+    <input type="url" placeholder="Enter YT video URL" />
+    <button type="button">Get</button>
+  </div>
 
-    <div class="ui container segment">
-      <!-- <img class="ui left floated medium rounded right spaced bordered image" src="https://i.ytimg.com/vi/cJ4YE5GjqO8/0.jpg" alt="Thumbnail"> -->
-      <div class="ui small header">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Optio, itaque.</div>
-      
-      <!-- <div class="ui list">
-        <div class="item">
-          <div class="content">
-            <div class="header big">lsadfhlsd</div>
-            <div>ladfgsl</div>
-            <div>lsadfl</div>
-          </div>
-        </div>
-      </div> -->
-      <!-- <span class="ui floated right">Nihilism, Jack on the Titanic, and Casteist friends</span> -->
-    </div>
-  </main>
+  <div class="output">
+    <p></p>
+  </div>
+
+  <script>
+    const $qs = selector => document.querySelector(selector);
+    const p = $qs(".output > p");
+    const input = $qs("input");
+
+    function get_video_id(url) {
+      const uri = new URL(url);
+      const path = uri.pathname;
+      const v = uri.searchParams.get("v");
+
+      if (v) return v;
+      else if (path.startsWith("/live")) return path.slice(6);
+      else if (path.startsWith("/shorts")) return path.slice(8);
+      else return path.slice(1);
+    }
+
+    $qs("button").addEventListener("click", () => {
+      const id = get_video_id(input.value);
+      console.log(id);
+    });
+  </script>
 
 </body>
 </html>
