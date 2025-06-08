@@ -15,7 +15,6 @@
             --input-bg-color: #333;
         }
         html {
-            /* Hamesha scrollbar dikhao taaki layout shift na ho */
             overflow-y: scroll;
         }
         body {
@@ -107,7 +106,7 @@
                 <div class="filter-grid" style="grid-template-columns: 1fr 1fr;">
                      <div class="form-group">
                         <label for="query">Search Query (kya search karna hai?)</label>
-                        <input type="text" id="query" placeholder="e.g., latest tech reviews" required>
+                        <input type="text" id="query" placeholder="e.g., latest tech reviews">
                     </div>
                     <div class="form-group">
                         <label for="channel-input">Channel (Handle, URL, ya ID)</label>
@@ -127,7 +126,7 @@
                     <legend>Advanced Filters</legend>
                     <div class="filter-grid">
                         <div class="form-group"><label for="order">Sort By</label><select id="order"><option value="relevance">Relevance</option><option value="date">Date</option><option value="rating">Rating</option><option value="title">Title</option><option value="viewCount">View Count</option></select></div>
-                        <div class="form-group"><label for="video-duration">Duration</label><select id="video-duration"><option value="any">Any</option><option value="short">Short (&lt; 4 min)</option><option value="medium">Medium (4-20 min)</option><option value="long">Long (&gt; 20 min)</option></select></div>
+                        <div class="form-group"><label for="video-duration">Duration</label><select id="video-duration"><option value="any">Any</option><option value="short">Short (< 4 min)</option><option value="medium">Medium (4-20 min)</option><option value="long">Long (> 20 min)</option></select></div>
                         <div class="form-group"><label for="video-definition">Definition</label><select id="video-definition"><option value="any">Any</option><option value="high">High</option><option value="standard">Standard</option></select></div>
                         <div class="form-group"><label for="safe-search">Safe Search</label><select id="safe-search"><option value="none" selected>None</option><option value="moderate">Moderate</option><option value="strict">Strict</option></select></div>
                         <div class="form-group"><label for="video-type">Video Type</label><select id="video-type"><option value="any">Any</option><option value="episode">Episode</option><option value="movie">Movie</option></select></div>
@@ -328,11 +327,11 @@
                             </div>
                         </a>
                         <div class="video-info">
-                            <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" class="video-title" title="${video.snippet.title.replace(/"/g, '&quot;')}">${video.snippet.title}</a>
+                            <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" class="video-title" title="${video.snippet.title.replace(/"/g, '"')}">${video.snippet.title}</a>
                             <div class="video-details">
                                 <a href="https://www.youtube.com/channel/${video.snippet.channelId}" target="_blank" class="channel-title">${video.snippet.channelTitle}</a>
                                 <div class="video-meta">
-                                    <span>${formatViews(video.statistics.viewCount)} views</span> &bull; <span>${formatDate(video.snippet.publishedAt)}</span>
+                                    <span>${formatViews(video.statistics.viewCount)} views</span> • <span>${formatDate(video.snippet.publishedAt)}</span>
                                 </div>
                             </div>
                         </div>
