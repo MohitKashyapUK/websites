@@ -14,9 +14,7 @@
             --border-color: #383838;
             --input-bg-color: #333;
         }
-        html {
-            overflow-y: scroll;
-        }
+        html { overflow-y: scroll; }
         body {
             font-family: 'Roboto', sans-serif; margin: 0;
             background-color: var(--background-color); color: var(--text-color);
@@ -61,9 +59,7 @@
             max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out;
             display: flex; flex-direction: column; gap: 15px;
         }
-        .collapsible.visible {
-            max-height: 1500px; transition: max-height 0.7s ease-in;
-        }
+        .collapsible.visible { max-height: 1500px; transition: max-height 0.7s ease-in; }
 
         #results-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .video-card {
@@ -78,10 +74,7 @@
             position: absolute; bottom: 8px; right: 8px; background-color: rgba(0,0,0,0.8);
             color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold;
         }
-        /* New class for Live videos */
-        .duration-tag.live-active {
-            background-color: var(--primary-color);
-        }
+        .duration-tag.live-active { background-color: var(--primary-color); }
         .video-info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
         .video-title {
             font-size: 1.1em; font-weight: 500; color: var(--text-color); text-decoration: none;
@@ -90,6 +83,7 @@
         .video-details { margin-top: auto; padding-top: 10px; }
         .channel-title { font-size: 0.9em; color: #aaa; margin-bottom: 4px; text-decoration: none; display: block; }
         .channel-title:hover { color: var(--text-color); }
+        .channel-subscribers { font-weight: bold; }
         .video-meta { font-size: 0.8em; color: #aaa; }
         #loading { display: none; text-align: center; padding: 20px; }
         .spinner {
@@ -148,25 +142,15 @@
                         <div class="form-group"><label for="relevance-language">Relevance Language</label><input type="text" id="relevance-language" placeholder="e.g., hi, en"></div>
                     </div>
                 </fieldset>
-
                 <fieldset>
                     <legend>Location Based Search (dono field zaroori hain)</legend>
                     <div class="filter-grid">
-                        <div class="form-group">
-                            <label for="location">Location (Latitude,Longitude)</label>
-                            <input type="text" id="location" placeholder="e.g., 28.6139,77.2090">
-                        </div>
-                        <div class="form-group">
-                            <label for="location-radius">Location Radius</label>
-                            <input type="text" id="location-radius" placeholder="e.g., 5km, 10mi, 1500m">
-                        </div>
+                        <div class="form-group"><label for="location">Location (Latitude,Longitude)</label><input type="text" id="location" placeholder="e.g., 28.6139,77.2090"></div>
+                        <div class="form-group"><label for="location-radius">Location Radius</label><input type="text" id="location-radius" placeholder="e.g., 5km, 10mi, 1500m"></div>
                     </div>
                 </fieldset>
             </div>
-            
-            <div class="main-button-container">
-                 <button type="submit">Search</button>
-            </div>
+            <div class="main-button-container"><button type="submit">Search</button></div>
         </form>
 
         <div id="results-container"></div>
@@ -174,11 +158,7 @@
     </div>
 
     <script>
-        // =================================================================================
-        // !! ZAROORI !! - Apni YouTube Data API v3 key yahan daalein
-        // =================================================================================
         const API_KEY = 'AIzaSyD83gAJY1s5uWTNCzoUcftvCS1Llh_5Okk'; 
-        // =================================================================================
 
         const form = document.getElementById('search-form');
         const resultsContainer = document.getElementById('results-container');
@@ -186,25 +166,17 @@
         const toggleBtn = document.getElementById('toggle-filters-btn');
         const collapsibleContent = document.getElementById('collapsible-filters');
 
-        let nextPageToken = null;
-        let isLoading = false;
-        let currentSearchData = {};
+        let nextPageToken = null, isLoading = false, currentSearchData = {};
 
         toggleBtn.addEventListener('click', () => {
             collapsibleContent.classList.toggle('visible');
             toggleBtn.classList.toggle('active');
-            if (collapsibleContent.classList.contains('visible')) {
-                toggleBtn.firstChild.textContent = 'Hide Advanced Filters ';
-            } else {
-                toggleBtn.firstChild.textContent = 'Show Advanced Filters ';
-            }
+            toggleBtn.firstChild.textContent = collapsibleContent.classList.contains('visible') ? 'Hide Advanced Filters ' : 'Show Advanced Filters ';
         });
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            resultsContainer.innerHTML = '';
-            nextPageToken = null;
-            
+            resultsContainer.innerHTML = ''; nextPageToken = null;
             currentSearchData = {
                 query: document.getElementById('query').value, channelInput: document.getElementById('channel-input').value,
                 order: document.getElementById('order').value, videoDuration: document.getElementById('video-duration').value,
@@ -223,15 +195,12 @@
 
         window.addEventListener('scroll', () => {
             if (isLoading || !nextPageToken) return;
-            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
-                fetchVideos(false);
-            }
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) fetchVideos(false);
         });
         
         async function fetchVideos(isNewSearch) {
             if (isLoading) return;
-            isLoading = true;
-            loadingIndicator.style.display = 'block';
+            isLoading = true; loadingIndicator.style.display = 'block';
 
             if (API_KEY === 'YOUR_API_KEY') {
                 alert('Please replace "YOUR_API_KEY" with your actual YouTube Data API key in the script.');
@@ -246,10 +215,7 @@
                 let channelId = null;
                 if (currentSearchData.channelInput) {
                     channelId = await getChannelId(currentSearchData.channelInput);
-                    if (!channelId && isNewSearch) {
-                        alert('Could not find a channel with the given Handle, URL, or ID.');
-                        throw new Error("Invalid channel input");
-                    }
+                    if (!channelId && isNewSearch) { alert('Could not find a channel with the given Handle, URL, or ID.'); throw new Error("Invalid channel input"); }
                 }
 
                 const searchParams = new URLSearchParams({ part: 'snippet', q: currentSearchData.query, key: API_KEY, maxResults: 15, type: 'video', order: currentSearchData.order, safeSearch: currentSearchData.safeSearch, });
@@ -259,19 +225,14 @@
                 const optionalParams = { videoDuration: 'videoDuration', videoDefinition: 'videoDefinition', videoType: 'videoType', videoCaption: 'videoCaption', videoLicense: 'videoLicense', videoEmbeddable: 'videoEmbeddable', eventType: 'eventType', videoSyndicated: 'videoSyndicated', videoDimension: 'videoDimension', videoPaidProductPlacement: 'videoPaidProductPlacement', videoCategoryId: 'videoCategoryId' };
                 for (const key in optionalParams) {
                     const value = currentSearchData[key.replace('videoPaidProductPlacement', 'paid-placement')];
-                    if (value && value !== 'any') {
-                        searchParams.append(key, value);
-                    }
+                    if (value && value !== 'any') searchParams.append(key, value);
                 }
                 
                 if (currentSearchData.publishedAfter) searchParams.append('publishedAfter', new Date(currentSearchData.publishedAfter).toISOString());
                 if (currentSearchData.publishedBefore) searchParams.append('publishedBefore', new Date(currentSearchData.publishedBefore).toISOString());
                 if (currentSearchData.regionCode) searchParams.append('regionCode', currentSearchData.regionCode.trim().toUpperCase());
                 if (currentSearchData.relevanceLanguage) searchParams.append('relevanceLanguage', currentSearchData.relevanceLanguage.trim());
-                if (currentSearchData.location) {
-                    searchParams.append('location', currentSearchData.location.trim());
-                    searchParams.append('locationRadius', currentSearchData.locationRadius.trim());
-                }
+                if (currentSearchData.location) { searchParams.append('location', currentSearchData.location.trim()); searchParams.append('locationRadius', currentSearchData.locationRadius.trim()); }
 
                 const searchResponse = await fetch(`https://www.googleapis.com/youtube/v3/search?${searchParams}`);
                 const searchData = await searchResponse.json();
@@ -282,19 +243,25 @@
                 const videoIds = searchData.items.map(item => item.id.videoId).join(',');
                 
                 if (!videoIds) {
-                    if(isNewSearch) resultsContainer.innerHTML = '<p style="text-align:center;">No videos found for this search.</p>';
+                    if(isNewSearch) resultsContainer.innerHTML = '<p style="text-align:center;">No videos found.</p>';
                     return;
                 }
 
-                const videoDetailsResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${API_KEY}`);
+                const videoDetailsResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,liveStreamingDetails&id=${videoIds}&key=${API_KEY}`);
                 const videoDetailsData = await videoDetailsResponse.json();
-                displayResults(videoDetailsData.items);
+                
+                const channelIds = [...new Set(videoDetailsData.items.map(v => v.snippet.channelId))];
+                const channelDetailsResponse = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelIds.join(',')}&key=${API_KEY}`);
+                const channelDetailsData = await channelDetailsResponse.json();
+                const subscriberMap = new Map(channelDetailsData.items.map(c => [c.id, c.statistics.subscriberCount]));
+                
+                displayResults(videoDetailsData.items, subscriberMap);
+
             } catch (error) {
                 console.error('Error fetching videos:', error);
-                if (isNewSearch) resultsContainer.innerHTML = `<p style="text-align:center;">An error occurred: ${error.message}. Check console.</p>`;
+                if (isNewSearch) resultsContainer.innerHTML = `<p style="text-align:center;">Error: ${error.message}.</p>`;
             } finally {
-                isLoading = false;
-                loadingIndicator.style.display = 'none';
+                isLoading = false; loadingIndicator.style.display = 'none';
             }
         }
 
@@ -320,20 +287,17 @@
             } catch (error) { console.error('Error fetching channel ID:', error); return null; }
         }
 
-        function displayResults(videos) {
+        function displayResults(videos, subscriberMap) {
             videos.forEach(video => {
                 const liveStatus = video.snippet.liveBroadcastContent;
-                let durationContent = '';
-                let durationClass = 'duration-tag';
+                let durationContent = '', durationClass = 'duration-tag';
 
-                if (liveStatus === 'live') {
-                    durationContent = 'LIVE';
-                    durationClass += ' live-active';
-                } else if (liveStatus === 'upcoming') {
-                    durationContent = 'Upcoming';
-                } else {
-                    durationContent = formatDuration(video.contentDetails.duration);
-                }
+                if (liveStatus === 'live') { durationContent = 'LIVE'; durationClass += ' live-active'; } 
+                else if (liveStatus === 'upcoming') { durationContent = 'Upcoming'; } 
+                else { durationContent = formatDuration(video.contentDetails.duration); }
+                
+                const subs = subscriberMap.get(video.snippet.channelId);
+                const subsText = subs ? ` <span class="channel-subscribers">(${formatNumber(subs)})</span>` : '';
 
                 const videoCard = `
                     <div class="video-card">
@@ -346,9 +310,9 @@
                         <div class="video-info">
                             <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" class="video-title" title="${video.snippet.title.replace(/"/g, '"')}">${video.snippet.title}</a>
                             <div class="video-details">
-                                <a href="https://www.youtube.com/channel/${video.snippet.channelId}" target="_blank" class="channel-title">${video.snippet.channelTitle}</a>
+                                <a href="https://www.youtube.com/channel/${video.snippet.channelId}" target="_blank" class="channel-title">${video.snippet.channelTitle}${subsText}</a>
                                 <div class="video-meta">
-                                    <span>${formatViews(video.statistics.viewCount)} views</span> • <span>${formatDate(video.snippet.publishedAt)}</span>
+                                    <span>${formatNumber(video.statistics.viewCount)} views</span> • <span>${formatDate(video)}</span>
                                 </div>
                             </div>
                         </div>
@@ -357,8 +321,11 @@
             });
         }
         function formatDuration(iso) { const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/); if (!m) return '0:00'; const h=parseInt(m[1]||0), i=parseInt(m[2]||0), s=parseInt(m[3]||0); return h>0 ? `${h}:${String(i).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${i}:${String(s).padStart(2,'0')}`; }
-        function formatDate(iso) { const s=Math.floor((new Date()-new Date(iso))/1000); let i=s/31536000; if(i>1) return Math.floor(i)+" years ago"; i=s/2592000; if(i>1) return Math.floor(i)+" months ago"; i=s/86400; if(i>1) return Math.floor(i)+" days ago"; i=s/3600; if(i>1) return Math.floor(i)+" hours ago"; i=s/60; if(i>1) return Math.floor(i)+" minutes ago"; return Math.floor(s)+" seconds ago"; }
-        function formatViews(v) { if(!v) return '0'; const n=parseInt(v); if(n>=1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'')+'B'; if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M'; if(n>=1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'')+'K'; return n.toString(); }
+        function formatDate(video) {
+            const dateToCompare = video.liveStreamingDetails?.actualStartTime || video.snippet.publishedAt;
+            const s=Math.floor((new Date()-new Date(dateToCompare))/1000); let i=s/31536000; if(i>1) return Math.floor(i)+" years ago"; i=s/2592000; if(i>1) return Math.floor(i)+" months ago"; i=s/86400; if(i>1) return Math.floor(i)+" days ago"; i=s/3600; if(i>1) return Math.floor(i)+" hours ago"; i=s/60; if(i>1) return Math.floor(i)+" minutes ago"; return Math.floor(s)+" seconds ago"; 
+        }
+        function formatNumber(v) { if(!v) return '0'; const n=parseInt(v); if(n>=1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'')+'B'; if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M'; if(n>=1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'')+'K'; return n.toString(); }
     </script>
 </body>
 </html>
