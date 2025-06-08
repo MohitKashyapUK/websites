@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate YouTube Video Searcher</title>
+    <style>
+        :root {
+            --primary-color: #ff0000;
+            --secondary-color: #282828;
+            --background-color: #121212;
+            --text-color: #ffffff;
+            --card-bg-color: #1e1e1e;
+            --border-color: #383838;
+            --input-bg-color: #333;
+        }
+        html {
+            /* Hamesha scrollbar dikhao taaki layout shift na ho */
+            overflow-y: scroll;
+        }
+        body {
+            font-family: 'Roboto', sans-serif; margin: 0;
+            background-color: var(--background-color); color: var(--text-color);
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: var(--primary-color); text-align: center; margin-bottom: 20px; }
+        #search-form {
+            display: flex; flex-direction: column; gap: 15px;
+            padding: 20px; background-color: var(--secondary-color);
+            border-radius: 8px; margin-bottom: 20px;
+        }
+        .form-group { display: flex; flex-direction: column; }
+        fieldset { border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin: 0; }
+        legend { padding: 0 10px; color: #ccc; font-weight: bold; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        label { margin-bottom: 5px; font-size: 0.9em; color: #aaa; }
+        input[type="text"], input[type="date"], select {
+            padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;
+            background-color: var(--input-bg-color); color: var(--text-color);
+            font-size: 1em; width: 100%; box-sizing: border-box;
+        }
+        .main-button-container { display:flex; justify-content:flex-end; }
+        button[type="submit"] {
+            padding: 12px 35px; background-color: var(--primary-color); color: var(--text-color);
+            border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em;
+            font-weight: bold; transition: background-color 0.3s;
+        }
+        button[type="submit"]:hover { background-color: #c00; }
+        
+        .toggle-button-container { display: flex; justify-content: center; }
+        #toggle-filters-btn {
+            background: none; border: 1px solid var(--border-color); color: #ccc;
+            padding: 8px 16px; border-radius: 4px; cursor: pointer;
+            width: 100%; text-align: center; font-size: 0.9em;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #toggle-filters-btn:hover { background-color: var(--input-bg-color); color: var(--text-color); }
+        .toggle-icon { display: inline-block; transition: transform 0.3s ease-in-out; }
+        #toggle-filters-btn.active .toggle-icon { transform: rotate(180deg); }
+
+        .collapsible {
+            max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .collapsible.visible {
+            max-height: 1500px; transition: max-height 0.7s ease-in;
+        }
+
+        #results-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .video-card {
+            background-color: var(--card-bg-color); border-radius: 8px; overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;
+            display: flex; flex-direction: column;
+        }
+        .video-card:hover { transform: translateY(-5px); }
+        .thumbnail-container { position: relative; }
+        .thumbnail { width: 100%; display: block; }
+        .duration {
+            position: absolute; bottom: 8px; right: 8px; background-color: rgba(0,0,0,0.8);
+            color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold;
+        }
+        .video-info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .video-title {
+            font-size: 1.1em; font-weight: 500; color: var(--text-color); text-decoration: none;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .video-details { margin-top: auto; padding-top: 10px; }
+        .channel-title { font-size: 0.9em; color: #aaa; margin-bottom: 4px; text-decoration: none; display: block; }
+        .channel-title:hover { color: var(--text-color); }
+        .video-meta { font-size: 0.8em; color: #aaa; }
+        #loading { display: none; text-align: center; padding: 20px; }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3); border-radius: 50%;
+            border-top: 4px solid var(--primary-color); width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: 0 auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ultimate YouTube Video Searcher</h1>
+
+        <form id="search-form">
+            <fieldset>
+                <legend>Main Search</legend>
+                <div class="filter-grid" style="grid-template-columns: 1fr 1fr;">
+                     <div class="form-group">
+                        <label for="query">Search Query (kya search karna hai?)</label>
+                        <input type="text" id="query" placeholder="e.g., latest tech reviews" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="channel-input">Channel (Handle, URL, ya ID)</label>
+                        <input type="text" id="channel-input" placeholder="e.g., @mkbhd or UC... or youtube.com/c/MKBHD">
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="toggle-button-container">
+                <button type="button" id="toggle-filters-btn">
+                    Show Advanced Filters <span class="toggle-icon">▼</span>
+                </button>
+            </div>
+
+            <div id="collapsible-filters" class="collapsible">
+                <fieldset>
+                    <legend>Advanced Filters</legend>
+                    <div class="filter-grid">
+                        <div class="form-group"><label for="order">Sort By</label><select id="order"><option value="relevance">Relevance</option><option value="date">Date</option><option value="rating">Rating</option><option value="title">Title</option><option value="viewCount">View Count</option></select></div>
+                        <div class="form-group"><label for="video-duration">Duration</label><select id="video-duration"><option value="any">Any</option><option value="short">Short (&lt; 4 min)</option><option value="medium">Medium (4-20 min)</option><option value="long">Long (&gt; 20 min)</option></select></div>
+                        <div class="form-group"><label for="video-definition">Definition</label><select id="video-definition"><option value="any">Any</option><option value="high">High</option><option value="standard">Standard</option></select></div>
+                        <div class="form-group"><label for="safe-search">Safe Search</label><select id="safe-search"><option value="none" selected>None</option><option value="moderate">Moderate</option><option value="strict">Strict</option></select></div>
+                        <div class="form-group"><label for="video-type">Video Type</label><select id="video-type"><option value="any">Any</option><option value="episode">Episode</option><option value="movie">Movie</option></select></div>
+                        <div class="form-group"><label for="video-caption">Captions</label><select id="video-caption"><option value="any">Any</option><option value="closedCaption">With Captions</option><option value="none">Without Captions</option></select></div>
+                        <div class="form-group"><label for="video-license">License</label><select id="video-license"><option value="any">Any</option><option value="creativeCommon">Creative Commons</option><option value="youtube">Standard YouTube</option></select></div>
+                        <div class="form-group"><label for="video-embeddable">Embeddable</label><select id="video-embeddable"><option value="any">Any</option><option value="true">True</option></select></div>
+                        <div class="form-group"><label for="event-type">Event Type</label><select id="event-type"><option value="any">Any</option><option value="completed">Completed</option><option value="live">Live</option><option value="upcoming">Upcoming</option></select></div>
+                        <div class="form-group"><label for="video-syndicated">Syndicated</label><select id="video-syndicated"><option value="any">Any</option><option value="true">True</option></select></div>
+                        <div class="form-group"><label for="video-dimension">Dimension</label><select id="video-dimension"><option value="any">Any</option><option value="2d">2D</option><option value="3d">3D</option></select></div>
+                        <div class="form-group"><label for="paid-placement">Paid Placement</label><select id="paid-placement"><option value="any">Any</option><option value="true">With Paid Placements</option></select></div>
+                        <div class="form-group"><label for="video-category">Video Category</label><select id="video-category"><option value="any">Any Category</option><option value="1">Film & Animation</option><option value="2">Autos & Vehicles</option><option value="10">Music</option><option value="15">Pets & Animals</option><option value="17">Sports</option><option value="19">Travel & Events</option><option value="20">Gaming</option><option value="22">People & Blogs</option><option value="23">Comedy</option><option value="24">Entertainment</option><option value="25">News & Politics</option><option value="26">Howto & Style</option><option value="27">Education</option><option value="28">Science & Technology</option><option value="29">Nonprofits & Activism</option></select></div>
+                        <div class="form-group"><label for="published-after">Published After</label><input type="date" id="published-after"></div>
+                        <div class="form-group"><label for="published-before">Published Before</label><input type="date" id="published-before"></div>
+                        <div class="form-group"><label for="region-code">Region Code</label><input type="text" id="region-code" placeholder="e.g., IN, US, GB"></div>
+                        <div class="form-group"><label for="relevance-language">Relevance Language</label><input type="text" id="relevance-language" placeholder="e.g., hi, en"></div>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Location Based Search (dono field zaroori hain)</legend>
+                    <div class="filter-grid">
+                        <div class="form-group">
+                            <label for="location">Location (Latitude,Longitude)</label>
+                            <input type="text" id="location" placeholder="e.g., 28.6139,77.2090">
+                        </div>
+                        <div class="form-group">
+                            <label for="location-radius">Location Radius</label>
+                            <input type="text" id="location-radius" placeholder="e.g., 5km, 10mi, 1500m">
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+            
+            <div class="main-button-container">
+                 <button type="submit">Search</button>
+            </div>
+        </form>
+
+        <div id="results-container"></div>
+        <div id="loading"><div class="spinner"></div><p>Loading more videos...</p></div>
+    </div>
+
+    <script>
+        // =================================================================================
+        // !! ZAROORI !! - Apni YouTube Data API v3 key yahan daalein
+        // =================================================================================
+        const API_KEY = 'AIzaSyD83gAJY1s5uWTNCzoUcftvCS1Llh_5Okk'; 
+        // =================================================================================
+
+        const form = document.getElementById('search-form');
+        const resultsContainer = document.getElementById('results-container');
+        const loadingIndicator = document.getElementById('loading');
+        const toggleBtn = document.getElementById('toggle-filters-btn');
+        const collapsibleContent = document.getElementById('collapsible-filters');
+
+        let nextPageToken = null;
+        let isLoading = false;
+        let currentSearchData = {};
+
+        toggleBtn.addEventListener('click', () => {
+            collapsibleContent.classList.toggle('visible');
+            toggleBtn.classList.toggle('active');
+            if (collapsibleContent.classList.contains('visible')) {
+                toggleBtn.firstChild.textContent = 'Hide Advanced Filters ';
+            } else {
+                toggleBtn.firstChild.textContent = 'Show Advanced Filters ';
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            resultsContainer.innerHTML = '';
+            nextPageToken = null;
+            
+            currentSearchData = {
+                query: document.getElementById('query').value, channelInput: document.getElementById('channel-input').value,
+                order: document.getElementById('order').value, videoDuration: document.getElementById('video-duration').value,
+                videoDefinition: document.getElementById('video-definition').value, safeSearch: document.getElementById('safe-search').value,
+                videoType: document.getElementById('video-type').value, videoCaption: document.getElementById('video-caption').value,
+                videoLicense: document.getElementById('video-license').value, videoEmbeddable: document.getElementById('video-embeddable').value,
+                eventType: document.getElementById('event-type').value, videoSyndicated: document.getElementById('video-syndicated').value,
+                videoDimension: document.getElementById('video-dimension').value, videoPaidProductPlacement: document.getElementById('paid-placement').value,
+                videoCategoryId: document.getElementById('video-category').value, publishedAfter: document.getElementById('published-after').value,
+                publishedBefore: document.getElementById('published-before').value, regionCode: document.getElementById('region-code').value,
+                relevanceLanguage: document.getElementById('relevance-language').value, location: document.getElementById('location').value,
+                locationRadius: document.getElementById('location-radius').value,
+            };
+            fetchVideos(true);
+        });
+
+        window.addEventListener('scroll', () => {
+            if (isLoading || !nextPageToken) return;
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+                fetchVideos(false);
+            }
+        });
+        
+        async function fetchVideos(isNewSearch) {
+            if (isLoading) return;
+            isLoading = true;
+            loadingIndicator.style.display = 'block';
+
+            if (API_KEY === 'YOUR_API_KEY') {
+                alert('Please replace "YOUR_API_KEY" with your actual YouTube Data API key in the script.');
+                loadingIndicator.style.display = 'none'; isLoading = false; return;
+            }
+            if ((currentSearchData.location && !currentSearchData.locationRadius) || (!currentSearchData.location && currentSearchData.locationRadius)) {
+                alert('Location and Location Radius are required together.');
+                loadingIndicator.style.display = 'none'; isLoading = false; return;
+            }
+
+            try {
+                let channelId = null;
+                if (currentSearchData.channelInput) {
+                    channelId = await getChannelId(currentSearchData.channelInput);
+                    if (!channelId && isNewSearch) {
+                        alert('Could not find a channel with the given Handle, URL, or ID.');
+                        throw new Error("Invalid channel input");
+                    }
+                }
+
+                const searchParams = new URLSearchParams({ part: 'snippet', q: currentSearchData.query, key: API_KEY, maxResults: 15, type: 'video', order: currentSearchData.order, safeSearch: currentSearchData.safeSearch, });
+                if (channelId) searchParams.append('channelId', channelId);
+                if (nextPageToken && !isNewSearch) searchParams.append('pageToken', nextPageToken);
+                
+                const optionalParams = { videoDuration: 'videoDuration', videoDefinition: 'videoDefinition', videoType: 'videoType', videoCaption: 'videoCaption', videoLicense: 'videoLicense', videoEmbeddable: 'videoEmbeddable', eventType: 'eventType', videoSyndicated: 'videoSyndicated', videoDimension: 'videoDimension', videoPaidProductPlacement: 'videoPaidProductPlacement', videoCategoryId: 'videoCategoryId' };
+                for (const key in optionalParams) {
+                    const value = currentSearchData[key.replace('videoPaidProductPlacement', 'paid-placement')];
+                    if (value && value !== 'any') {
+                        searchParams.append(key, value);
+                    }
+                }
+                
+                if (currentSearchData.publishedAfter) searchParams.append('publishedAfter', new Date(currentSearchData.publishedAfter).toISOString());
+                if (currentSearchData.publishedBefore) searchParams.append('publishedBefore', new Date(currentSearchData.publishedBefore).toISOString());
+                if (currentSearchData.regionCode) searchParams.append('regionCode', currentSearchData.regionCode.trim().toUpperCase());
+                if (currentSearchData.relevanceLanguage) searchParams.append('relevanceLanguage', currentSearchData.relevanceLanguage.trim());
+                if (currentSearchData.location) {
+                    searchParams.append('location', currentSearchData.location.trim());
+                    searchParams.append('locationRadius', currentSearchData.locationRadius.trim());
+                }
+
+                const searchResponse = await fetch(`https://www.googleapis.com/youtube/v3/search?${searchParams}`);
+                const searchData = await searchResponse.json();
+                
+                if (searchData.error) throw new Error(searchData.error.message);
+
+                nextPageToken = searchData.nextPageToken || null;
+                const videoIds = searchData.items.map(item => item.id.videoId).join(',');
+                
+                if (!videoIds) {
+                    if(isNewSearch) resultsContainer.innerHTML = '<p style="text-align:center;">No videos found for this search.</p>';
+                    return;
+                }
+
+                const videoDetailsResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${videoIds}&key=${API_KEY}`);
+                const videoDetailsData = await videoDetailsResponse.json();
+                displayResults(videoDetailsData.items);
+            } catch (error) {
+                console.error('Error fetching videos:', error);
+                if (isNewSearch) resultsContainer.innerHTML = `<p style="text-align:center;">An error occurred: ${error.message}. Check console.</p>`;
+            } finally {
+                isLoading = false;
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        async function getChannelId(input) {
+            input = input.trim();
+            if (input.startsWith('UC') && input.length > 20) return input;
+            
+            let handle = null;
+            try {
+                if (input.startsWith('@')) handle = input.substring(1);
+                else if (input.includes('youtube.com/')) {
+                    const parts = input.split('/');
+                    const lastPart = parts.pop() || parts.pop();
+                    if (lastPart.startsWith('@')) handle = lastPart.substring(1);
+                    else if(parts.includes('c') || parts.includes('user')) handle = lastPart;
+                    else if (parts.includes('channel')) return lastPart;
+                }
+                if(!handle) handle = input;
+
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}`);
+                const data = await response.json();
+                return (data.items && data.items.length > 0) ? data.items[0].id : null;
+            } catch (error) { console.error('Error fetching channel ID:', error); return null; }
+        }
+
+        function displayResults(videos) {
+            videos.forEach(video => {
+                const videoCard = `
+                    <div class="video-card">
+                        <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank">
+                           <div class="thumbnail-container">
+                                <img src="${video.snippet.thumbnails.high.url}" alt="${video.snippet.title}" class="thumbnail" loading="lazy">
+                                <span class="duration">${formatDuration(video.contentDetails.duration)}</span>
+                            </div>
+                        </a>
+                        <div class="video-info">
+                            <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" class="video-title" title="${video.snippet.title.replace(/"/g, '&quot;')}">${video.snippet.title}</a>
+                            <div class="video-details">
+                                <a href="https://www.youtube.com/channel/${video.snippet.channelId}" target="_blank" class="channel-title">${video.snippet.channelTitle}</a>
+                                <div class="video-meta">
+                                    <span>${formatViews(video.statistics.viewCount)} views</span> &bull; <span>${formatDate(video.snippet.publishedAt)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                resultsContainer.insertAdjacentHTML('beforeend', videoCard);
+            });
+        }
+        function formatDuration(iso) { const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/); if (!m) return '0:00'; const h=parseInt(m[1]||0), i=parseInt(m[2]||0), s=parseInt(m[3]||0); return h>0 ? `${h}:${String(i).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${i}:${String(s).padStart(2,'0')}`; }
+        function formatDate(iso) { const s=Math.floor((new Date()-new Date(iso))/1000); let i=s/31536000; if(i>1) return Math.floor(i)+" years ago"; i=s/2592000; if(i>1) return Math.floor(i)+" months ago"; i=s/86400; if(i>1) return Math.floor(i)+" days ago"; i=s/3600; if(i>1) return Math.floor(i)+" hours ago"; i=s/60; if(i>1) return Math.floor(i)+" minutes ago"; return Math.floor(s)+" seconds ago"; }
+        function formatViews(v) { if(!v) return '0'; const n=parseInt(v); if(n>=1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'')+'B'; if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M'; if(n>=1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'')+'K'; return n.toString(); }
+    </script>
+</body>
+</html>
