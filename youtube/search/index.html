@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultimate YouTube Video Searcher</title>
-    <link rel="icon" href="/images/youtube.ico" type="image/x-icon" />
     <style>
         :root {
             --primary-color: #ff0000;
@@ -75,9 +74,13 @@
         .video-card:hover { transform: translateY(-5px); }
         .thumbnail-container { position: relative; }
         .thumbnail { width: 100%; display: block; }
-        .duration {
+        .duration-tag {
             position: absolute; bottom: 8px; right: 8px; background-color: rgba(0,0,0,0.8);
             color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold;
+        }
+        /* New class for Live videos */
+        .duration-tag.live-active {
+            background-color: var(--primary-color);
         }
         .video-info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
         .video-title {
@@ -319,12 +322,25 @@
 
         function displayResults(videos) {
             videos.forEach(video => {
+                const liveStatus = video.snippet.liveBroadcastContent;
+                let durationContent = '';
+                let durationClass = 'duration-tag';
+
+                if (liveStatus === 'live') {
+                    durationContent = 'LIVE';
+                    durationClass += ' live-active';
+                } else if (liveStatus === 'upcoming') {
+                    durationContent = 'Upcoming';
+                } else {
+                    durationContent = formatDuration(video.contentDetails.duration);
+                }
+
                 const videoCard = `
                     <div class="video-card">
                         <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank">
                            <div class="thumbnail-container">
                                 <img src="${video.snippet.thumbnails.high.url}" alt="${video.snippet.title}" class="thumbnail" loading="lazy">
-                                <span class="duration">${formatDuration(video.contentDetails.duration)}</span>
+                                <span class="${durationClass}">${durationContent}</span>
                             </div>
                         </a>
                         <div class="video-info">
