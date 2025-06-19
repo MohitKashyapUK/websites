@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate YouTube Video Searcher</title>
+    <style>
+        /* -- CSS Variables for Theming -- */
+        :root {
+            --primary-color: #ff0000;
+            --secondary-color: #282828;
+            --background-color: #121212;
+            --text-color: #ffffff;
+            --card-bg-color: #1e1e1e;
+            --border-color: #383838;
+            --input-bg-color: #333;
+        }
+        html { overflow-y: scroll; }
+        body {
+            font-family: 'Roboto', sans-serif; margin: 0;
+            background-color: var(--background-color); color: var(--text-color);
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: var(--primary-color); text-align: center; margin-bottom: 20px; }
+        #search-form {
+            display: flex; flex-direction: column; gap: 15px;
+            padding: 20px; background-color: var(--secondary-color);
+            border-radius: 8px; margin-bottom: 20px;
+        }
+        .form-group { display: flex; flex-direction: column; }
+        fieldset { border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin: 0; }
+        legend { padding: 0 10px; color: #ccc; font-weight: bold; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        label { margin-bottom: 5px; font-size: 0.9em; color: #aaa; }
+        input[type="text"], input[type="date"], select {
+            padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;
+            background-color: var(--input-bg-color); color: var(--text-color);
+            font-size: 1em; width: 100%; box-sizing: border-box;
+        }
+        select:disabled, input:disabled {
+            background-color: #2a2a2a; color: #777; cursor: not-allowed;
+        }
+        .main-button-container { display:flex; justify-content:flex-end; }
+        button[type="submit"] {
+            padding: 12px 35px; background-color: var(--primary-color); color: var(--text-color);
+            border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em;
+            font-weight: bold; transition: background-color 0.3s;
+        }
+        button[type="submit"]:hover { background-color: #c00; }
+        
+        .toggle-button-container { display: flex; justify-content: center; }
+        #toggle-filters-btn {
+            background: none; border: 1px solid var(--border-color); color: #ccc;
+            padding: 8px 16px; border-radius: 4px; cursor: pointer;
+            width: 100%; text-align: center; font-size: 0.9em;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #toggle-filters-btn:hover { background-color: var(--input-bg-color); color: var(--text-color); }
+        .toggle-icon { display: inline-block; transition: transform 0.3s ease-in-out; }
+        #toggle-filters-btn.active .toggle-icon { transform: rotate(180deg); }
+
+        .collapsible {
+            max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .collapsible.visible { max-height: 1500px; transition: max-height 0.7s ease-in; }
+
+        #results-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+        .card {
+            background-color: var(--card-bg-color); border-radius: 8px; overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.2s;
+            display: flex; flex-direction: column;
+        }
+        .card:hover { transform: translateY(-5px); }
+        .thumbnail-container { position: relative; }
+        .thumbnail { width: 100%; display: block; aspect-ratio: 16 / 9; object-fit: cover;}
+        
+        .duration-tag {
+            position: absolute; bottom: 8px; right: 8px; background-color: rgba(0,0,0,0.8);
+            color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; font-weight: bold;
+        }
+        .duration-tag.live-active { background-color: var(--primary-color); }
+        
+        .playlist-overlay {
+            position: absolute; top: 0; right: 0; bottom: 0; width: 40%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-color); pointer-events: none;
+        }
+        .playlist-overlay .item-count { font-size: 1.1em; font-weight: bold; }
+        .playlist-overlay svg { width: 28px; height: 28px; margin-top: 2px; }
+
+        .info-container { padding: 10px; flex-grow: 1; display: flex; flex-direction: column; }
+        .card-title {
+            font-size: 0.95em; font-weight: 500; color: var(--text-color); text-decoration: none;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .details-container { margin-top: auto; padding-top: 8px; }
+        .channel-title { font-size: 0.9em; color: #aaa; margin-bottom: 4px; text-decoration: none; display: block; }
+        .channel-title:hover { color: var(--text-color); }
+        .meta-info { font-size: 0.8em; color: #aaa; }
+        
+        /* Default Horizontal Channel Card */
+        .channel-card { flex-direction: row; align-items: center; padding: 10px; }
+        .channel-card .thumbnail-container { flex-shrink: 0; width: 100px; margin-right: 15px; }
+        .channel-card .thumbnail { border-radius: 50%; aspect-ratio: 1 / 1; }
+        .channel-card .info-container { padding: 0; align-self: center; text-align: left; }
+        .channel-card .card-title { font-size: 1.05em; -webkit-line-clamp: 1; }
+        .channel-card .meta-info { font-size: 0.9em; margin-top: 4px; }
+        .channel-card .description {
+            font-size: 0.8em; margin-top: 8px; color: #aaa;
+            -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        /* Vertical Channel Card for 'Any' search */
+        .channel-card-vertical { align-items: center; }
+        .channel-card-vertical .thumbnail-container {
+            width: 100px;
+            height: 100px;
+            margin: 15px 0 12px;
+        }
+        .channel-card-vertical .thumbnail { border-radius: 50%; aspect-ratio: 1 / 1; }
+        .channel-card-vertical .info-container {
+            padding: 0 10px 10px;
+            text-align: center;
+            align-items: center;
+        }
+        .channel-card-vertical .card-title { font-size: 1.05em; -webkit-line-clamp: 2; }
+        .channel-card-vertical .description {
+            font-size: 0.8em;
+            margin-top: 8px;
+            color: #aaa;
+            -webkit-line-clamp: 2;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        #loading { display: none; text-align: center; padding: 20px; }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3); border-radius: 50%;
+            border-top: 4px solid var(--primary-color); width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: 0 auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .no-results-message { text-align: center; grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ultimate YouTube Video Searcher</h1>
+
+        <form id="search-form">
+            <fieldset>
+                <legend>Main Search</legend>
+                <div class="filter-grid" style="grid-template-columns: 1fr 1fr;">
+                     <div class="form-group">
+                        <label for="query">Search Query (kya search karna hai?)</label>
+                        <input type="text" id="query" placeholder="e.g., latest tech reviews">
+                    </div>
+                    <div class="form-group">
+                        <label for="channel-input">Channel (Handle, URL, ya ID)</label>
+                        <input type="text" id="channel-input" placeholder="e.g., @mkbhd or UC... or youtube.com/c/MKBHD">
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="toggle-button-container">
+                <button type="button" id="toggle-filters-btn">
+                    Show Advanced Filters <span class="toggle-icon">▼</span>
+                </button>
+            </div>
+
+            <div id="collapsible-filters" class="collapsible">
+                <fieldset>
+                    <legend>Advanced Filters</legend>
+                    <div class="filter-grid">
+                        <div class="form-group"><label for="search-type">Search type</label><select id="search-type"><option value="any" selected>Any</option><option value="video">Videos</option><option value="channel">Channels</option><option value="playlist">Playlists</option></select></div>
+                        <div class="form-group"><label for="order">Sort By</label><select id="order"><option value="relevance">Relevance</option><option value="date">Date</option><option value="rating">Rating</option><option value="title">Title</option><option value="viewCount">View Count</option></select></div>
+                        <div class="form-group"><label for="video-duration">Duration</label><select id="video-duration"><option value="any">Any</option><option value="short">Short (< 4 min)</option><option value="medium">Medium (4-20 min)</option><option value="long">Long (> 20 min)</option></select></div>
+                        <div class="form-group"><label for="video-definition">Definition</label><select id="video-definition"><option value="any">Any</option><option value="high">High</option><option value="standard">Standard</option></select></div>
+                        <div class="form-group"><label for="safe-search">Safe Search</label><select id="safe-search"><option value="none">None</option><option value="moderate">Moderate</option><option value="strict">Strict</option></select></div>
+                        <div class="form-group"><label for="video-caption">Captions</label><select id="video-caption"><option value="any">Any</option><option value="closedCaption">With Captions</option><option value="none">Without Captions</option></select></div>
+                        <div class="form-group"><label for="video-license">License</label><select id="video-license"><option value="any">Any</option><option value="creativeCommon">Creative Commons</option><option value="youtube">Standard YouTube</option></select></div>
+                        <div class="form-group"><label for="event-type">Event Type</label><select id="event-type"><option value="any">Any</option><option value="completed">Completed</option><option value="live">Live</option><option value="upcoming">Upcoming</option></select></div>
+                        <div class="form-group"><label for="video-dimension">Dimension</label><select id="video-dimension"><option value="any">Any</option><option value="2d">2D</option><option value="3d">3D</option></select></div>
+                        <div class="form-group"><label for="paid-placement">Paid Placement</label><select id="paid-placement"><option value="any">Any</option><option value="true">With Paid Placements</option></select></div>
+                        <div class="form-group"><label for="published-after">Published After</label><input type="date" id="published-after"></div>
+                        <div class="form-group"><label for="published-before">Published Before</label><input type="date" id="published-before"></div>
+                        <div class="form-group"><label for="region-code">Region Code</label><input type="text" id="region-code" placeholder="e.g., IN, US, GB"></div>
+                        <div class="form-group"><label for="relevance-language">Relevance Language</label><input type="text" id="relevance-language" placeholder="e.g., hi, en"></div>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Location Based Search (dono field zaroori hain)</legend>
+                    <div class="filter-grid">
+                        <div class="form-group"><label for="location">Location (Latitude,Longitude)</label><input type="text" id="location" placeholder="e.g., 28.6139,77.2090"></div>
+                        <div class="form-group"><label for="location-radius">Location Radius</label><input type="text" id="location-radius" placeholder="e.g., 5km, 10mi, 1500m"></div>
+                    </div>
+                </fieldset>
+            </div>
+            <div class="main-button-container"><button type="submit">Search</button></div>
+        </form>
+
+        <div id="results-container"></div>
+        <div id="loading"><div class="spinner"></div><p>Loading more results...</p></div>
+    </div>
+
+    <script>
+        // -- Global Variables & Constants --
+        const API_KEY = 'AIzaSyD83gAJY1s5uWTNCzoUcftvCS1Llh_5Okk'; // <-- YAHAN APNA ASLI API KEY DAALEIN
+        
+        // --- API FIELDS FOR OPTIMIZATION ---
+        const SEARCH_FIELDS = 'nextPageToken,items/id(videoId,channelId,playlistId)';
+        const VIDEO_FIELDS = 'items(id,snippet(publishedAt,channelId,title,channelTitle,thumbnails(default,medium),liveBroadcastContent),contentDetails(duration),statistics(viewCount),liveStreamingDetails(actualStartTime,actualEndTime))';
+        const CHANNEL_FIELDS = 'items(id,snippet(title,description,thumbnails(default,medium)),statistics(subscriberCount,hiddenSubscriberCount))';
+        const PLAYLIST_FIELDS = 'items(id,snippet(publishedAt,channelId,title,channelTitle,thumbnails(default,medium)),contentDetails(itemCount))';
+
+        // DOM elements
+        const form = document.getElementById('search-form');
+        const resultsContainer = document.getElementById('results-container');
+        const loadingIndicator = document.getElementById('loading');
+        const toggleBtn = document.getElementById('toggle-filters-btn');
+        const searchTypeSelect = document.getElementById('search-type');
+        const orderSelect = document.getElementById('order');
+        const eventTypeSelect = document.getElementById('event-type');
+
+        // State variables
+        let nextPageToken = null; 
+        let isLoading = false;    
+        let currentSearchData = {}; 
+
+        // -- Event Listeners --
+        toggleBtn.addEventListener('click', () => {
+            document.getElementById('collapsible-filters').classList.toggle('visible');
+            toggleBtn.classList.toggle('active');
+            toggleBtn.firstChild.textContent = toggleBtn.classList.contains('active') ? 'Hide Advanced Filters ' : 'Show Advanced Filters ';
+        });
+
+        searchTypeSelect.addEventListener('change', updateFilterStates);
+
+        eventTypeSelect.addEventListener('change', () => {
+            // Agar user 'Any' ke alawa kuch select karta hai (e.g., Live, Completed)
+            if (eventTypeSelect.value !== 'any') {
+                // To Search Type ko 'video' par set kar do, kyunki yah filter sirf video search par kaam karta hai
+                searchTypeSelect.value = 'video';
+                // Aur filter states ko update karo taaki sab aapas mein sync rahe
+                updateFilterStates();
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault(); 
+            resultsContainer.innerHTML = ''; 
+            nextPageToken = null;
+            currentSearchData = {
+                query: document.getElementById('query').value, channelInput: document.getElementById('channel-input').value,
+                type: document.getElementById('search-type').value,
+                order: document.getElementById('order').value, videoDuration: document.getElementById('video-duration').value,
+                videoDefinition: document.getElementById('video-definition').value, safeSearch: document.getElementById('safe-search').value,
+                videoCaption: document.getElementById('video-caption').value,
+                videoLicense: document.getElementById('video-license').value,
+                eventType: document.getElementById('event-type').value,
+                videoDimension: document.getElementById('video-dimension').value, videoPaidProductPlacement: document.getElementById('paid-placement').value,
+                publishedAfter: document.getElementById('published-after').value,
+                publishedBefore: document.getElementById('published-before').value, regionCode: document.getElementById('region-code').value,
+                relevanceLanguage: document.getElementById('relevance-language').value, location: document.getElementById('location').value,
+                locationRadius: document.getElementById('location-radius').value,
+            };
+            fetchItems(true);
+        });
+
+        window.addEventListener('scroll', () => {
+            if (isLoading || !nextPageToken) return;
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
+                fetchItems(false);
+            }
+        });
+
+        // -- Smart Filter Logic --
+        function updateFilterStates() {
+            const selectedType = searchTypeSelect.value;
+            
+            // <<< START: NAYA SUDHAR YAHAN HAI >>>
+            const isStrictlyVideoSearch = selectedType === 'video';
+            const isAnyVideoSearch = selectedType === 'video' || selectedType === 'any';
+
+            // Ye filters sirf tab kaam karte hain jab Search Type = 'video' ho
+            const strictlyVideoTypeFilterIds = ['event-type', 'location', 'location-radius'];
+            
+            // Ye filters tab kaam karte hain jab Search Type = 'video' ya 'any' ho
+            const generalVideoFilterIds = [
+                'video-duration', 'video-definition', 'video-caption', 'video-license', 
+                'video-dimension', 'paid-placement'
+            ];
+
+            // Filters ko disable/reset karo jo sirf `type=video` par chalte hain
+            strictlyVideoTypeFilterIds.forEach(id => {
+                const el = document.getElementById(id);
+                el.disabled = !isStrictlyVideoSearch;
+                if (!isStrictlyVideoSearch) {
+                    if (el.tagName === 'SELECT') el.value = 'any';
+                    else if (el.tagName === 'INPUT') el.value = '';
+                }
+            });
+
+            // Filters ko disable/reset karo jo channel/playlist par nahi chalte
+            generalVideoFilterIds.forEach(id => {
+                const el = document.getElementById(id);
+                el.disabled = !isAnyVideoSearch;
+                if (!isAnyVideoSearch) {
+                    if (el.tagName === 'SELECT') el.value = 'any';
+                    else if (el.tagName === 'INPUT') el.value = '';
+                }
+            });
+            // <<< END: NAYA SUDHAR >>>
+            
+            const currentOrderValue = orderSelect.value;
+            orderSelect.innerHTML = '';
+
+            const orderOptions = {
+                 any: [ { value: 'relevance', text: 'Relevance' }, { value: 'date', text: 'Date' }, { value: 'rating', text: 'Rating' }, { value: 'title', text: 'Title' }, { value: 'viewCount', text: 'View Count' }, { value: 'videoCount', text: 'Video Count' } ],
+                video: [ { value: 'relevance', text: 'Relevance' }, { value: 'date', text: 'Date' }, { value: 'rating', text: 'Rating' }, { value: 'title', text: 'Title' }, { value: 'viewCount', text: 'View Count' } ],
+                channel: [ { value: 'relevance', text: 'Relevance' }, { value: 'title', text: 'Title' }, { value: 'videoCount', text: 'Video Count' } ],
+                playlist: [ { value: 'relevance', text: 'Relevance' }, { value: 'date', text: 'Date' }, { value: 'title', text: 'Title' } ]
+            };
+
+            const options = orderOptions[selectedType] || orderOptions.video;
+            options.forEach(opt => {
+                const optionElement = document.createElement('option');
+                optionElement.value = opt.value;
+                optionElement.textContent = opt.text;
+                orderSelect.appendChild(optionElement);
+            });
+
+            if (options.some(opt => opt.value === currentOrderValue)) {
+                orderSelect.value = currentOrderValue;
+            }
+        }
+        
+        // -- Core Functions --
+        async function fetchItems(isNewSearch) {
+            if (isLoading) return; 
+            isLoading = true;
+            loadingIndicator.style.display = 'block'; 
+
+            try {
+                const searchParams = new URLSearchParams({ part: 'snippet', key: API_KEY, maxResults: 50, fields: SEARCH_FIELDS });
+                const { query, channelInput, type, ...filters } = currentSearchData;
+                
+                if (query) searchParams.append('q', query);
+
+                if (channelInput) {
+                    const channelId = await getChannelId(channelInput);
+                    if (channelId) {
+                        searchParams.append('channelId', channelId);
+                    } else { throw new Error("Could not find the specified channel."); }
+                }
+
+                if (type !== 'any') { searchParams.append('type', type); }
+
+                for (const key in filters) {
+                    const value = filters[key];
+                    if (value && value !== 'any' && value !== 'none' && value !== 'relevance') {
+                        if (key === 'publishedAfter') { searchParams.append(key, new Date(value).toISOString()); } 
+                        else if (key === 'publishedBefore') {
+                            const beforeDate = new Date(value);
+                            beforeDate.setUTCHours(23, 59, 59, 999);
+                            searchParams.append(key, beforeDate.toISOString());
+                        } else { searchParams.append(key, value); }
+                    }
+                }
+
+                if (nextPageToken && !isNewSearch) searchParams.append('pageToken', nextPageToken);
+                
+                const searchResponse = await fetch(`https://www.googleapis.com/youtube/v3/search?${searchParams}`);
+                const searchData = await searchResponse.json();
+                if (searchData.error) throw new Error(searchData.error.message);
+
+                nextPageToken = searchData.nextPageToken || null;
+                const searchItems = searchData.items;
+
+                if (!searchItems || searchItems.length === 0) {
+                    if (isNewSearch) displayItems([]);
+                    return;
+                }
+
+                const videoIds = [], channelIds = [], playlistIds = [];
+                searchItems.forEach(item => {
+                    if (item.id.videoId) videoIds.push(item.id.videoId);
+                    else if (item.id.channelId) channelIds.push(item.id.channelId);
+                    else if (item.id.playlistId) playlistIds.push(item.id.playlistId);
+                });
+
+                const detailPromises = [];
+                if (videoIds.length > 0) detailPromises.push(fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics,liveStreamingDetails&id=${videoIds.join(',')}&key=${API_KEY}&fields=${VIDEO_FIELDS}`));
+                if (channelIds.length > 0) detailPromises.push(fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIds.join(',')}&key=${API_KEY}&fields=${CHANNEL_FIELDS}`));
+                if (playlistIds.length > 0) detailPromises.push(fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&id=${playlistIds.join(',')}&key=${API_KEY}&fields=${PLAYLIST_FIELDS}`));
+
+                const detailResponses = await Promise.all(detailPromises);
+                const detailJson = await Promise.all(detailResponses.map(res => res.json()));
+
+                const detailsMap = new Map();
+                detailJson.forEach(dataSet => {
+                    (dataSet.items || []).forEach(item => detailsMap.set(item.id, item));
+                });
+                
+                const finalItems = searchItems.map(item => {
+                    const id = item.id.videoId || item.id.channelId || item.id.playlistId;
+                    return detailsMap.get(id);
+                }).filter(Boolean);
+
+                displayItems(finalItems);
+                
+                if (isNewSearch && finalItems.length === 0 && nextPageToken) {
+                    fetchItems(false);
+                }
+
+            } catch (error) {
+                console.error('Error fetching items:', error);
+                if (isNewSearch) resultsContainer.innerHTML = `<p class="no-results-message">Error: ${error.message}. Check your API Key and other parameters.</p>`;
+            } finally {
+                isLoading = false; 
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        function displayItems(items) {
+            // Set grid layout based on search type and conditions
+            if (currentSearchData.type === 'channel' && !currentSearchData.channelInput) {
+                resultsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(350px, 1fr))';
+            } else {
+                resultsContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(210px, 1fr))';
+            }
+            
+            if (items.length > 0) {
+                const noResultsEl = resultsContainer.querySelector('.no-results-message');
+                if (noResultsEl) noResultsEl.remove();
+            }
+
+            if (items.length === 0 && resultsContainer.innerHTML === '') {
+                resultsContainer.innerHTML = '<p class="no-results-message">No results found.</p>';
+                return;
+            }
+            items.forEach(item => {
+                let cardHTML = '';
+                if (!item) return;
+                
+                if (item.statistics && 'viewCount' in item.statistics) { // Is a Video
+                    cardHTML = renderVideoCard(item);
+                } else if (item.statistics && 'subscriberCount' in item.statistics) { // Is a Channel
+                    if(item.snippet.title.endsWith(' - Topic')) return;
+                    cardHTML = (currentSearchData.type === 'channel' && !currentSearchData.channelInput) ? renderChannelCard(item) : renderChannelCardVertical(item);
+                } else if (item.contentDetails && 'itemCount' in item.contentDetails) { // Is a Playlist
+                    cardHTML = renderPlaylistCard(item);
+                }
+
+                if (cardHTML) resultsContainer.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+        
+        function renderVideoCard(video) {
+            let dateTooltip;
+            const liveDetails = video.liveStreamingDetails;
+            if (liveDetails && liveDetails.actualStartTime) {
+                if (liveDetails.actualEndTime) {
+                    dateTooltip = `Stream started: ${formatFullDate(liveDetails.actualStartTime)}\nStream ended: ${formatFullDate(liveDetails.actualEndTime)}`;
+                } else {
+                    dateTooltip = `Stream started: ${formatFullDate(liveDetails.actualStartTime)}`;
+                }
+            } else {
+                dateTooltip = `Published on: ${formatFullDate(video.snippet.publishedAt)}`;
+            }
+
+            const liveStatus = video.snippet.liveBroadcastContent;
+            let durationContent = '', durationClass = 'duration-tag';
+            if (liveStatus === 'live') { durationContent = 'LIVE'; durationClass += ' live-active'; } 
+            else if (liveStatus === 'upcoming') { durationContent = 'Upcoming'; } 
+            else if (video.contentDetails?.duration) { durationContent = formatDuration(video.contentDetails.duration); }
+            const viewCount = video.statistics?.viewCount || 0;
+            const dateToCompare = video.liveStreamingDetails?.actualStartTime || video.snippet.publishedAt;
+            const thumbnailUrl = video.snippet.thumbnails.default?.url || video.snippet.thumbnails.medium?.url || 'https://via.placeholder.com/120x90?text=No+Thumbnail';
+
+            return `
+                <div class="card">
+                    <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank">
+                       <div class="thumbnail-container">
+                            <img src="${thumbnailUrl}" alt="${video.snippet.title}" class="thumbnail" loading="lazy">
+                            ${durationContent ? `<span class="${durationClass}">${durationContent}</span>` : ''}
+                        </div>
+                    </a>
+                    <div class="info-container">
+                        <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank" class="card-title" title="${video.snippet.title.replace(/"/g, '"')}">${video.snippet.title}</a>
+                        <div class="details-container">
+                            <a href="https://www.youtube.com/channel/${video.snippet.channelId}" target="_blank" class="channel-title">${video.snippet.channelTitle}</a>
+                            <div class="meta-info">
+                                <span>${formatNumber(viewCount)} views</span> • <span title="${dateTooltip}" style="white-space: pre;">${formatDate(dateToCompare)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        function renderChannelCard(channel) { // Horizontal Card
+            const thumbnails = channel.snippet.thumbnails;
+            const thumbnailUrl = thumbnails.default?.url || thumbnails.medium?.url || 'https://via.placeholder.com/300x300?text=No+Image';
+            const subscriberCount = channel.statistics?.hiddenSubscriberCount ? 'Subscribers hidden' : formatNumber(channel.statistics?.subscriberCount || 0) + ' subscribers';
+            const description = channel.snippet.description;
+            return `
+                <div class="card channel-card">
+                    <a href="https://www.youtube.com/channel/${channel.id}" target="_blank" class="thumbnail-container">
+                        <img src="${thumbnailUrl}" alt="${channel.snippet.title}" class="thumbnail" loading="lazy">
+                    </a>
+                    <div class="info-container">
+                        <a href="https://www.youtube.com/channel/${channel.id}" target="_blank" class="card-title" title="${channel.snippet.title.replace(/"/g, '"')}">${channel.snippet.title}</a>
+                        <div class="meta-info">${subscriberCount}</div>
+                        ${description ? `<div class="description" title="${description.replace(/"/g, '"')}">${description}</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        function renderChannelCardVertical(channel) { // NEW Vertical Card
+            const thumbnails = channel.snippet.thumbnails;
+            const thumbnailUrl = thumbnails.default?.url || thumbnails.medium?.url || 'https://via.placeholder.com/300x300?text=No+Image';
+            const subscriberCount = channel.statistics?.hiddenSubscriberCount ? 'Subscribers hidden' : formatNumber(channel.statistics?.subscriberCount || 0) + ' subscribers';
+            const description = channel.snippet.description;
+            return `
+                <div class="card channel-card-vertical">
+                    <a href="https://www.youtube.com/channel/${channel.id}" target="_blank" class="thumbnail-container">
+                        <img src="${thumbnailUrl}" alt="${channel.snippet.title}" class="thumbnail" loading="lazy">
+                    </a>
+                    <div class="info-container">
+                        <a href="https://www.youtube.com/channel/${channel.id}" target="_blank" class="card-title" title="${channel.snippet.title.replace(/"/g, '"')}">${channel.snippet.title}</a>
+                        <div class="meta-info">${subscriberCount}</div>
+                        ${description ? `<div class="description" title="${description.replace(/"/g, '"')}">${description}</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        function renderPlaylistCard(playlist) {
+            const thumbnails = playlist.snippet.thumbnails;
+            const thumbnailUrl = thumbnails.default?.url || thumbnails.medium?.url || 'https://via.placeholder.com/120x90?text=No+Thumbnail';
+            const itemCount = playlist.contentDetails?.itemCount || 0;
+            return `
+                <div class="card">
+                    <a href="https://www.youtube.com/playlist?list=${playlist.id}" target="_blank">
+                       <div class="thumbnail-container">
+                            <img src="${thumbnailUrl}" alt="${playlist.snippet.title}" class="thumbnail" loading="lazy">
+                            <div class="playlist-overlay">
+                                <span class="item-count">${itemCount}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24" fill="#FFFFFF">
+                                    <path d="M0 0h24v24H0V0z" fill="none"/>
+                                    <path d="M19 9H2v2h17V9zm0-4H2v2h17V5zM2 15h13v-2H2v2zm15-2v6l5-3-5-3z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="info-container">
+                        <a href="https://www.youtube.com/playlist?list=${playlist.id}" target="_blank" class="card-title" title="${playlist.snippet.title.replace(/"/g, '"')}">${playlist.snippet.title}</a>
+                        <div class="details-container">
+                            <a href="https://www.youtube.com/channel/${playlist.snippet.channelId}" target="_blank" class="channel-title">${playlist.snippet.channelTitle}</a>
+                            <div class="meta-info">
+                                <span title="Created on: ${formatFullDate(playlist.snippet.publishedAt)}">Created ${formatDate(playlist.snippet.publishedAt)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        
+        async function getChannelId(input) {
+            input = input.trim();
+            if (!input) return null;
+            if (input.startsWith('UC') && input.length > 20) return input;
+            let handle = null;
+            try {
+                if (input.startsWith('@')) handle = input.substring(1);
+                else if (input.includes('youtube.com/')) {
+                    const path = new URL(input).pathname;
+                    const parts = path.split('/').filter(p => p);
+                    if (path.startsWith('/@')) handle = parts[0].substring(1);
+                    else if (parts[0] === 'channel') return parts[1];
+                    else if (parts[0] === 'c' || parts[0] === 'user') handle = parts[1];
+                    else handle = input;
+                }
+                if (!handle) handle = input;
+                const response = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=${handle}&key=${API_KEY}&fields=items(id)`);
+                const data = await response.json();
+                return (data.items && data.items.length > 0) ? data.items[0].id : null;
+            } catch (error) { console.error('Error getting channel ID:', error); return null; }
+        }
+
+        // -- Helper Functions (Utility) --
+        function formatFullDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleString(undefined, { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+            } catch (e) { return dateStr; }
+        }
+        function formatDuration(iso) { const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/); if (!m) return '0:00'; const h=parseInt(m[1]||0), i=parseInt(m[2]||0), s=parseInt(m[3]||0); return h>0 ? `${h}:${String(i).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${i}:${String(s).padStart(2,'0')}`; }
+        function formatDate(dateStr) { if(!dateStr) return ''; const s=Math.floor((new Date()-new Date(dateStr))/1000); let i=s/31536000; if(i>1) return Math.floor(i)+" years ago"; i=s/2592000; if(i>1) return Math.floor(i)+" months ago"; i=s/86400; if(i>1) return Math.floor(i)+" days ago"; i=s/3600; if(i>1) return Math.floor(i)+" hours ago"; i=s/60; if(i>1) return Math.floor(i)+" minutes ago"; return Math.floor(s)+" seconds ago"; }
+        function formatNumber(v) { if(!v) return '0'; const n=parseInt(v); if(n>=1e9) return (n/1e9).toFixed(1).replace(/\.0$/,'')+'B'; if(n>=1e6) return (n/1e6).toFixed(1).replace(/\.0$/,'')+'M'; if(n>=1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'')+'K'; return n.toString(); }
+
+        // Initialize filter states on page load
+        document.addEventListener('DOMContentLoaded', updateFilterStates);
+    </script>
+</body>
+</html>

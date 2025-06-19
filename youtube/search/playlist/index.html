@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Playlist Finder</title>
+    <style>
+        /* CSS Code */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        :root {
+            --primary-color: #ff0000;
+            --secondary-color: #282828;
+            --background-color: #121212;
+            --font-color: #ffffff;
+            --card-bg-color: #1e1e1e;
+            --border-color: #333;
+        }
+
+        html {
+            overflow-y: scroll;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background-color);
+            color: var(--font-color);
+            margin: 0;
+            padding: 20px 0;
+        }
+        
+        body::-webkit-scrollbar {
+            width: 8px;
+        }
+        body::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+        body::-webkit-scrollbar-thumb {
+            background-color: var(--primary-color);
+            border-radius: 10px;
+            border: 2px solid var(--background-color);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        #channel-input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px 15px;
+            font-size: 16px;
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--font-color);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            background-color: var(--primary-color);
+            color: var(--font-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #c00000;
+        }
+        
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        #loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+        }
+        
+        #loader .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #playlist-section {
+            display: none;
+            margin-top: 30px;
+            width: 100%;
+        }
+
+        #playlist-search-input {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+        }
+
+        #playlist-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 20px;
+        }
+
+        .playlist-item {
+            background-color: var(--card-bg-color);
+            border-radius: 8px;
+            overflow: hidden;
+            text-decoration: none;
+            color: var(--font-color);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid var(--border-color);
+        }
+
+        .playlist-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.2);
+        }
+
+        .playlist-item img {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            background-color: #333; /* Placeholder color while image loads */
+        }
+
+        .playlist-info {
+            padding: 15px;
+        }
+
+        .playlist-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+
+        /* --- बदला हुआ CSS: वीडियो काउंट और डेट के लिए --- */
+        .playlist-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #aaa;
+            margin: 0;
+        }
+        .playlist-date {
+            cursor: help; /* होवर पर मदद वाला कर्सर दिखाता है */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>YouTube Playlist Finder</h1>
+        <div id="channel-input-section">
+            <input type="text" id="channel-url-input" placeholder="YouTube channel ki link paste karein...">
+            <button id="get-playlists-btn">Playlists Laayein</button>
+        </div>
+        <div id="loader">
+            <div class="spinner"></div>
+            <p id="loader-text">Playlists get ki jaa rahi hain...</p>
+        </div>
+    </div>
+
+    <div id="playlist-section">
+        <div class="container">
+            <input type="text" id="playlist-search-input" placeholder="Yahaan playlist search karein...">
+        </div>
+        <div id="playlist-container">
+            <!-- Playlists yahaan display hongi -->
+        </div>
+    </div>
+
+    <script>
+        // JavaScript Code
+        const API_KEY = 'AIzaSyD83gAJY1s5uWTNCzoUcftvCS1Llh_5Okk';
+        const DOM = {
+            channelUrlInput: document.getElementById('channel-url-input'),
+            getPlaylistsBtn: document.getElementById('get-playlists-btn'),
+            loader: document.getElementById('loader'),
+            loaderText: document.getElementById('loader-text'),
+            playlistSection: document.getElementById('playlist-section'),
+            playlistSearchInput: document.getElementById('playlist-search-input'),
+            playlistContainer: document.getElementById('playlist-container'),
+        };
+        let allPlaylists = [];
+
+        // --- नया Function: Relative Time बनाने के लिए ---
+        function formatTimeAgo(isoDate) {
+            const date = new Date(isoDate);
+            const now = new Date();
+            const seconds = Math.round((now - date) / 1000);
+            const minutes = Math.round(seconds / 60);
+            const hours = Math.round(minutes / 60);
+            const days = Math.round(hours / 24);
+            const weeks = Math.round(days / 7);
+            const months = Math.round(days / 30.44);
+            const years = Math.round(days / 365.25);
+
+            if (seconds < 60) return `${seconds} second ago`;
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+            if (weeks < 5) return `${weeks} week${weeks > 1 ? 's' : ''} ago`;
+            if (months < 12) return `${months} month${months > 1 ? 's' : ''} ago`;
+            return `${years} year${years > 1 ? 's' : ''} ago`;
+        }
+
+        // --- नया Function: पूरी Date को फॉर्मेट करने के लिए ---
+        function formatFullDate(isoDate) {
+            const date = new Date(isoDate);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            // आप 'hi-IN' का भी उपयोग कर सकते हैं: date.toLocaleDateString('hi-IN', options)
+            return `प्रकाशित: ${date.toLocaleDateString('en-US', options)}`;
+        }
+
+        DOM.getPlaylistsBtn.addEventListener('click', handleGetPlaylists);
+        DOM.playlistSearchInput.addEventListener('input', handleSearch);
+
+        function getIdOrHandleFromUrl(url) {
+            let match = url.match(/@([\w.-]+)/); if (match) return match[1];
+            match = url.match(/\/channel\/(UC[\w-]{22})/); if (match) return match[1];
+            match = url.match(/\/(c|user)\/([\w-]+)/); if (match) return match[2];
+            return null;
+        }
+
+        async function resolveNameToId(name) {
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${name}&type=channel&key=${API_KEY}`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.items?.length > 0) return data.items[0].snippet.channelId;
+                return null;
+            } catch (error) {
+                console.error('Error resolving name:', error); return null;
+            }
+        }
+
+        async function handleGetPlaylists() {
+            const url = DOM.channelUrlInput.value.trim(); if (!url) { alert('Please YouTube channel ka URL daalein.'); return; }
+            DOM.playlistSearchInput.value = '';
+            DOM.getPlaylistsBtn.disabled = true; DOM.getPlaylistsBtn.textContent = 'Loading...';
+            DOM.playlistSection.style.display = 'none'; DOM.loader.style.display = 'block';
+            DOM.loaderText.textContent = 'Channel ID praapt ki jaa rahi hai...';
+            try {
+                let identifier = getIdOrHandleFromUrl(url);
+                if (!identifier) throw new Error('Di gayi link se Channel ID ya Handle nahi mil saka.');
+                let channelId = identifier;
+                if (!identifier.startsWith('UC')) {
+                    DOM.loaderText.textContent = `'${identifier}' ke liye Channel ID dhoondi jaa rahi hai...`;
+                    const resolvedId = await resolveNameToId(identifier);
+                    if (!resolvedId) throw new Error(`'${identifier}' ke liye koi channel nahi mila.`);
+                    channelId = resolvedId;
+                }
+                await fetchAllPlaylists(channelId);
+                displayPlaylists(allPlaylists);
+                DOM.loader.style.display = 'none'; DOM.playlistSection.style.display = 'block';
+            } catch (error) {
+                alert('Ek error aayi: ' + error.message); console.error(error);
+                DOM.loader.style.display = 'none';
+            } finally {
+                DOM.getPlaylistsBtn.disabled = false; DOM.getPlaylistsBtn.textContent = 'Playlists Laayein';
+            }
+        }
+
+        async function fetchAllPlaylists(channelId) {
+            allPlaylists = []; let nextPageToken = null; let fetchedCount = 0;
+            do {
+                let url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&channelId=${channelId}&maxResults=50&key=${API_KEY}`;
+                if (nextPageToken) url += `&pageToken=${nextPageToken}`;
+                DOM.loaderText.textContent = `Playlists get ki jaa rahi hain... (${fetchedCount} mil gayi hain)`;
+                const response = await fetch(url); const data = await response.json();
+                if (data.error) throw new Error(`API Error: ${data.error.message}`);
+                if (data.items) { allPlaylists.push(...data.items); fetchedCount = allPlaylists.length; }
+                nextPageToken = data.nextPageToken;
+            } while (nextPageToken);
+        }
+
+        // --- बदला हुआ Function: displayPlaylists ---
+        function displayPlaylists(playlistsToDisplay) {
+            DOM.playlistContainer.innerHTML = ''; 
+            if (playlistsToDisplay.length === 0) {
+                DOM.playlistContainer.innerHTML = '<div class="container"><p>Is channel par koi public playlist nahi mili.</p></div>';
+                return;
+            }
+            playlistsToDisplay.forEach(playlist => {
+                const relativeTime = formatTimeAgo(playlist.snippet.publishedAt);
+                const fullDateTitle = formatFullDate(playlist.snippet.publishedAt);
+
+                const playlistElement = document.createElement('a');
+                playlistElement.href = `https://www.youtube.com/playlist?list=${playlist.id}`;
+                playlistElement.target = '_blank';
+                playlistElement.className = 'playlist-item';
+                
+                // --- बदला हुआ HTML Structure (lazy loading और date शामिल है) ---
+                playlistElement.innerHTML = `
+                    <img src="${playlist.snippet.thumbnails.medium.url}" alt="${playlist.snippet.title} thumbnail" loading="lazy">
+                    <div class="playlist-info">
+                        <h3>${playlist.snippet.title}</h3>
+                        <div class="playlist-meta">
+                            <span>${playlist.contentDetails.itemCount} videos</span>
+                            <span class="playlist-date" title="${fullDateTitle}">${relativeTime}</span>
+                        </div>
+                    </div>
+                `;
+                DOM.playlistContainer.appendChild(playlistElement);
+            });
+        }
+        
+        function handleSearch() {
+            const searchTerm = DOM.playlistSearchInput.value.toLowerCase();
+            const filteredPlaylists = allPlaylists.filter(p => p.snippet.title.toLowerCase().includes(searchTerm));
+            displayPlaylists(filteredPlaylists);
+        }
+    </script>
+</body>
+</html>
