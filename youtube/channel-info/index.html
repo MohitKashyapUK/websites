@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced YouTube Channel Finder</title>
+    <style>
+        /* CSS Styles - Polished Dark Mode & Responsive */
+        :root {
+            --bg-color: #121212;
+            --surface-color: #1e1e1e;
+            --primary-text: #e0e0e0;
+            --secondary-text: #b0b0b0;
+            --red-accent: #ff4d4d;
+            --border-color: #333;
+        }
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-text);
+            margin: 0;
+            padding-top: 100px; /* Header ke liye jagah */
+        }
+        .header {
+            background-color: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header-content {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--red-accent);
+            margin: 0;
+            white-space: nowrap;
+        }
+        .input-area {
+            width: 100%;
+            display: flex;
+            gap: 10px;
+        }
+        #channelInput {
+            width: 100%;
+            padding: 12px;
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            border-radius: 8px;
+            font-size: 16px;
+            color: var(--primary-text);
+        }
+        #getDetailsBtn {
+            padding: 12px 20px;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #getDetailsBtn:hover { background-color: #c00; }
+        .container {
+            width: 95%;
+            max-width: 1100px;
+            margin: 0 auto 20px; 
+            padding: 0 10px;
+        }
+        .loader, #error {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .loader { color: var(--secondary-text); }
+        #error { color: #ffcdd2; background-color: #4a1c1c; border: 1px solid #b71c1c; }
+        .hidden { display: none; }
+        
+        /* Result Styles */
+        .banner {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: var(--surface-color);
+        }
+        .banner img { width: 100%; display: block; }
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: -60px;
+            padding: 0 20px;
+            position: relative;
+        }
+        .profile-main {
+            display: flex;
+            align-items: center; 
+            gap: 20px;
+        }
+        .profile-header img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 5px solid var(--bg-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            flex-shrink: 0;
+        }
+        .channel-name { 
+            font-size: 2.2rem; 
+            font-weight: 700; 
+            margin: 0; 
+            color: #fff;
+            /* MODIFIED: Added text-shadow for visibility on light backgrounds */
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+        }
+        .channel-description { 
+            font-size: 1rem; 
+            color: var(--secondary-text); 
+            line-height: 1.5; 
+            margin-top: 5px; 
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-top: 20px;
+            align-items: start;
+        }
+        .details-section, .stats-section {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+        }
+        h3 {
+            font-size: 1.4rem;
+            color: var(--red-accent);
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .info-item, .stat-item { text-align: center; }
+        .info-item .label, .stat-item .label { font-size: 0.9rem; color: var(--secondary-text); margin-bottom: 5px; text-transform: uppercase; }
+        .info-item .value, .stat-item .value { font-size: 1.5rem; font-weight: 600; color: var(--primary-text); }
+        .stat-item .value { font-size: 2rem; }
+        
+        .keywords-container { margin-top: 20px; }
+        .keywords { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .keyword-tag { background-color: #333; color: var(--primary-text); padding: 5px 12px; border-radius: 15px; font-size: 0.9rem; }
+        .playlist-link {
+            display: inline-block;
+            margin-top: 15px;
+            background-color: var(--red-accent);
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .playlist-link:hover { transform: scale(1.05); }
+
+        /* Responsive Design */
+        @media (max-width: 900px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            body { padding-top: 140px; }
+            .header-content { flex-direction: column; }
+            .channel-name { font-size: 1.8rem; }
+            .stat-item .value { font-size: 1.5rem; }
+            .info-item .value { font-size: 1.2rem; }
+        }
+        @media (max-width: 480px) {
+            .profile-header { margin-top: -40px; padding: 0 10px; }
+            .profile-header img { width: 80px; height: 80px; }
+            .info-grid { grid-template-columns: 1fr; gap: 15px; text-align: left;}
+            .info-item {text-align: left;}
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="header-content">
+            <h1 class="header-title">YouTube Channel Finder</h1>
+            <div class="input-area">
+                <input type="text" id="channelInput" placeholder="Enter Channel URL, Handle (@name), or ID...">
+                <button id="getDetailsBtn">Find</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="loader" class="loader hidden">Searching...</div>
+        <div id="error" class="hidden"></div>
+        
+        <div id="result-container" class="hidden">
+            <div class="banner hidden"><img id="channelBanner" src="" alt="Channel Banner"></div>
+            
+            <div class="profile-header">
+                <div class="profile-main">
+                    <img id="channelAvatar" src="" alt="Channel Avatar">
+                    <div>
+                        <h2 id="channelName" class="channel-name"></h2>
+                        <p id="channelDescription" class="channel-description"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <section class="details-section">
+                    <h3>Channel Details</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="label">Country</div>
+                            <div id="country" class="value"></div>
+                        </div>
+                        <div class="info-item">
+                            <div class="label">Joined</div>
+                            <div id="publishedAt" class="value"></div>
+                        </div>
+                    </div>
+                    <div id="keywords-container" class="keywords-container hidden">
+                        <div class="label">KEYWORDS</div>
+                        <div id="keywords" class="keywords"></div>
+                    </div>
+                </section>
+
+                <section class="stats-section">
+                    <h3>Statistics</h3>
+                    <div class="info-grid">
+                        <div class="stat-item"><div class="label">Subscribers</div><div id="subscriberCount" class="value"></div></div>
+                        <div class="stat-item"><div class="label">Videos</div><div id="videoCount" class="value"></div></div>
+                        <div class="stat-item"><div class="label">Views</div><div id="viewCount" class="value"></div></div>
+                    </div>
+                    <a id="playlistLink" href="#" target="_blank" class="playlist-link">View All Videos</a>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'AIzaSyBZ0cRo-gQncqmw2VNKaGS2TtjuHuxtH7k';
+        const ALL_PARTS = 'snippet,statistics,brandingSettings,contentDetails,topicDetails';
+
+        // HTML elements
+        const getDetailsBtn = document.getElementById('getDetailsBtn');
+        const channelInput = document.getElementById('channelInput');
+        const loader = document.getElementById('loader');
+        const errorDiv = document.getElementById('error');
+        const resultContainer = document.getElementById('result-container');
+        
+        // Result display elements
+        const channelBanner = document.getElementById('channelBanner');
+        const channelAvatar = document.getElementById('channelAvatar');
+        const channelName = document.getElementById('channelName');
+        const channelDescription = document.getElementById('channelDescription');
+        const country = document.getElementById('country');
+        const publishedAt = document.getElementById('publishedAt');
+        const keywords = document.getElementById('keywords');
+        const subscriberCount = document.getElementById('subscriberCount');
+        const videoCount = document.getElementById('videoCount');
+        const viewCount = document.getElementById('viewCount');
+        const playlistLink = document.getElementById('playlistLink');
+        const keywordsContainer = document.getElementById('keywords-container');
+        
+        getDetailsBtn.addEventListener('click', handleSearch);
+        channelInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') handleSearch();
+        });
+
+        async function handleSearch() {
+            const userInput = channelInput.value.trim();
+            if (!userInput) {
+                showError("Please enter a YouTube Channel URL, Handle, or ID.");
+                return;
+            }
+
+            loader.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+
+            try {
+                let apiUrl = '';
+                // Check if user input is an ID, a handle, or a URL
+                if (userInput.startsWith('UC') && userInput.length > 20) {
+                    // It's a Channel ID
+                    apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=${ALL_PARTS}&id=${userInput}&key=${API_KEY}`;
+                } else {
+                    // It's a handle or URL, extract the handle
+                    let handle = '';
+                    if (userInput.includes('youtube.com/')) {
+                        const parts = userInput.split('/');
+                        const handlePart = parts.find(p => p.startsWith('@'));
+                        handle = handlePart ? handlePart.substring(1) : (parts.pop() || parts.pop());
+                    } else {
+                        handle = userInput.replace('@', '');
+                    }
+                    apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=${ALL_PARTS}&forHandle=${handle}&key=${API_KEY}`;
+                }
+
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (!response.ok || !data.items || data.items.length === 0) {
+                    throw new Error(data.error?.message || "Channel not found. Please check the input.");
+                }
+                
+                displayChannelData(data.items[0]);
+
+            } catch (err) {
+                showError(err.message);
+                console.error("Error:", err);
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+        
+        function displayChannelData(data) {
+            const { snippet, statistics, brandingSettings, contentDetails } = data;
+            
+            // --- Banner Logic ---
+            const bannerDiv = channelBanner.parentElement;
+            const profileHeader = document.querySelector('.profile-header');
+            const bannerUrl = brandingSettings.image?.bannerExternalUrl;
+            if (bannerUrl) {
+                channelBanner.src = bannerUrl;
+                bannerDiv.classList.remove('hidden');
+                profileHeader.style.marginTop = ''; // Reset to CSS default for overlay
+            } else {
+                bannerDiv.classList.add('hidden');
+                profileHeader.style.marginTop = '0'; 
+            }
+            
+            channelAvatar.src = snippet.thumbnails.high.url;
+            channelName.textContent = snippet.title;
+            
+            // --- Description Logic ---
+            // MODIFIED: Added logic to set HTML title attribute for full description on hover
+            const fullDescription = snippet.description;
+            if (fullDescription && fullDescription.length > 250) {
+                channelDescription.textContent = fullDescription.substring(0, 250) + '...';
+                channelDescription.title = fullDescription; // Set full description for tooltip
+            } else {
+                channelDescription.textContent = fullDescription || '';
+                channelDescription.title = ''; // Clear title if not truncated
+            }
+
+            // Channel Details
+            country.textContent = snippet.country || 'N/A';
+            publishedAt.textContent = new Date(snippet.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            // --- Keywords Logic ---
+            keywords.innerHTML = ''; // Clear previous keywords
+            const channelKeywords = brandingSettings.channel?.keywords;
+            const keywordArray = channelKeywords ? (channelKeywords.match(/(?:"[^"]+"|[^"\s]+)/g) || []) : [];
+
+            if (keywordArray.length > 0) {
+                keywordsContainer.classList.remove('hidden');
+                keywordArray.slice(0, 15).forEach(kw => {
+                    const tag = document.createElement('span');
+                    tag.className = 'keyword-tag';
+                    tag.textContent = kw.replace(/"/g, '');
+                    keywords.appendChild(tag);
+                });
+            } else {
+                keywordsContainer.classList.add('hidden');
+            }
+
+            // Statistics
+            subscriberCount.textContent = statistics.hiddenSubscriberCount ? 'Hidden' : formatNumber(statistics.subscriberCount);
+            videoCount.textContent = formatNumber(statistics.videoCount);
+            viewCount.textContent = formatNumber(statistics.viewCount);
+
+            // Playlist Link
+            const uploadsPlaylistId = contentDetails.relatedPlaylists.uploads;
+            playlistLink.href = `https://www.youtube.com/playlist?list=${uploadsPlaylistId}`;
+
+            resultContainer.classList.remove('hidden');
+        }
+
+        function showError(message) {
+            errorDiv.textContent = `Error: ${message}`;
+            errorDiv.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+        }
+
+        function formatNumber(num) {
+            if (!num) return 'N/A';
+            return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(num));
+        }
+    </script>
+</body>
+</html>
