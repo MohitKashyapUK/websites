@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Playlist Finder (Optimized)</title>
+    <style>
+        /* Google Font for better readability */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap');
+
+        :root {
+            --primary-bg: #121212;
+            --secondary-bg: #1e1e1e;
+            --primary-text: #e0e0e0;
+            --secondary-text: #b3b3b3;
+            --accent-color: #bb86fc;
+            --error-color: #cf6679;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--secondary-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #videoUrl {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background-color: #2c2c2c;
+            color: var(--primary-text);
+            font-size: 16px;
+            outline: none;
+        }
+
+        #videoUrl:focus {
+            border-color: var(--accent-color);
+        }
+
+        #findBtn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--accent-color);
+            color: #121212;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #findBtn:hover {
+            background-color: #a764fa;
+        }
+        
+        #findBtn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .loader {
+            border: 4px solid #333;
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none; /* Initially hidden */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #results {
+            margin-top: 25px;
+            text-align: left;
+            padding: 20px;
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            min-height: 50px;
+        }
+
+        #results h2 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+        
+        .playlist-link {
+            display: block;
+            background-color: #3a3a3a;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            color: var(--primary-text);
+            text-decoration: none;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .playlist-link:hover {
+            background-color: #4f4f4f;
+            transform: translateY(-2px);
+        }
+
+        .error {
+            color: var(--error-color);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>YouTube Playlist Finder</h1>
+        <p style="color: var(--secondary-text); margin-bottom: 20px;">Enter a YouTube video URL to find which playlists it belongs to on its channel.</p>
+        <div class="input-group">
+            <input type="text" id="videoUrl" placeholder="Paste a YouTube video URL here...">
+            <button id="findBtn">Find</button>
+        </div>
+        <div class="loader" id="loader"></div>
+        <div id="results">
+            <p style="color: var(--secondary-text);">Results will be shown here.</p>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "AIzaSyD83gAJY1s5uWTNCzoUcftvCS1Llh_5Okk"; // Replace with your actual API Key if needed
+        const findBtn = document.getElementById('findBtn');
+        const videoUrlInput = document.getElementById('videoUrl');
+        const resultsDiv = document.getElementById('results');
+        const loader = document.getElementById('loader');
+
+        findBtn.addEventListener('click', findVideoInPlaylists);
+        
+        function showLoader(show) {
+            loader.style.display = show ? 'block' : 'none';
+        }
+
+        function displayMessage(message, isError = false) {
+            resultsDiv.innerHTML = `<p class="${isError ? 'error' : ''}">${message}</p>`;
+        }
+        
+        function displayPlaylists(playlists, videoTitle) {
+            let html = `<h2>'${videoTitle}' was found in the following playlists:</h2>`;
+            if (playlists.length > 0) {
+                playlists.forEach(playlist => {
+                    const playlistUrl = `https://www.youtube.com/playlist?list=${playlist.id}`;
+                    html += `<a href="${playlistUrl}" target="_blank" rel="noopener noreferrer" class="playlist-link">${playlist.snippet.title}</a>`;
+                });
+            } else {
+                html = `<h2>'${videoTitle}' was not found in any of the channel's public playlists.</h2>`;
+            }
+            resultsDiv.innerHTML = html;
+        }
+
+        function extractVideoId(url) {
+            const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        /**
+         * Checks a single playlist for a specific video ID. Handles pagination.
+         * Returns the playlist object if the video is found, otherwise returns null.
+         */
+        async function checkPlaylistForVideo(playlist, videoId) {
+            const playlistItemFields = 'nextPageToken,items/snippet/resourceId/videoId';
+            let pageToken;
+            do {
+                let itemsApiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist.id}&maxResults=50&key=${API_KEY}&fields=${encodeURIComponent(playlistItemFields)}`;
+                if (pageToken) {
+                    itemsApiUrl += `&pageToken=${pageToken}`;
+                }
+                const playlistItemsResponse = await fetch(itemsApiUrl);
+                if (!playlistItemsResponse.ok) {
+                    // If a single playlist check fails, log it but don't stop the others.
+                    console.error(`Failed to fetch items for playlist: ${playlist.snippet.title}`);
+                    return null; // Return null on failure
+                }
+                const playlistItemsData = await playlistItemsResponse.json();
+                
+                if (playlistItemsData.items && playlistItemsData.items.some(item => item.snippet.resourceId.videoId === videoId)) {
+                    return playlist; // Found the video, return the playlist object
+                }
+                pageToken = playlistItemsData.nextPageToken;
+            } while (pageToken);
+            return null; // Video not found in this playlist
+        }
+
+        async function findVideoInPlaylists() {
+            const url = videoUrlInput.value.trim();
+            if (!url) {
+                displayMessage("Please enter a YouTube video URL.", true);
+                return;
+            }
+
+            const videoId = extractVideoId(url);
+            if (!videoId) {
+                displayMessage("Invalid YouTube URL. Please enter a valid one.", true);
+                return;
+            }
+
+            showLoader(true);
+            findBtn.disabled = true;
+            resultsDiv.innerHTML = '';
+
+            try {
+                // Step 1: Get video details (channelId and title)
+                const videoFields = 'items(snippet(channelId,title))';
+                const videoResponse = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${API_KEY}&fields=${encodeURIComponent(videoFields)}`);
+                const videoData = await videoResponse.json();
+
+                if (!videoData.items || videoData.items.length === 0) {
+                    throw new Error("Video not found. Please check the URL.");
+                }
+                const channelId = videoData.items[0].snippet.channelId;
+                const videoTitle = videoData.items[0].snippet.title;
+                displayMessage(`Found video: '${videoTitle}'. Now fetching channel playlists...`);
+
+                // Step 2: Get all playlists from the channel
+                let allPlaylists = [];
+                let nextPageToken;
+                const playlistFields = 'nextPageToken,items(id,snippet/title)';
+                do {
+                    let playlistApiUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet&channelId=${channelId}&maxResults=50&key=${API_KEY}&fields=${encodeURIComponent(playlistFields)}`;
+                    if (nextPageToken) {
+                        playlistApiUrl += `&pageToken=${nextPageToken}`;
+                    }
+                    const playlistsResponse = await fetch(playlistApiUrl);
+                    const playlistsData = await playlistsResponse.json();
+                    
+                    if(playlistsData.items) {
+                       allPlaylists = allPlaylists.concat(playlistsData.items);
+                    }
+                    nextPageToken = playlistsData.nextPageToken;
+                } while (nextPageToken);
+
+                if (allPlaylists.length === 0) {
+                     displayPlaylists([], videoTitle); // Use display function for consistent messaging
+                     return;
+                }
+                
+                displayMessage(`Found ${allPlaylists.length} playlists. Checking all of them for the video simultaneously...`);
+
+                // Step 3: Create an array of promises, one for each playlist check.
+                const checkPromises = allPlaylists.map(playlist => checkPlaylistForVideo(playlist, videoId));
+
+                // Step 4: Run all checks concurrently and wait for them to settle.
+                // Promise.allSettled waits for all promises, even if some fail.
+                const results = await Promise.allSettled(checkPromises);
+
+                // Step 5: Filter the results to get only the playlists where the video was found.
+                const foundInPlaylists = results
+                    .filter(result => result.status === 'fulfilled' && result.value !== null)
+                    .map(result => result.value); // Extract the playlist object from the successful result
+                
+                displayPlaylists(foundInPlaylists, videoTitle);
+
+            } catch (error) {
+                console.error('API Error:', error);
+                displayMessage(`An error occurred: ${error.message}`, true);
+            } finally {
+                showLoader(false);
+                findBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
